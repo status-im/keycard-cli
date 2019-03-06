@@ -1,15 +1,21 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
 	"github.com/status-im/keycard-go/hexutils"
+	"github.com/status-im/keycard-go/identifiers"
 )
 
-var ndefRecord = hexutils.HexToBytes("0024d40f12616e64726f69642e636f6d3a706b67696d2e7374617475732e657468657265756d")
+var (
+	ErrAppletAlreadyInstalled = errors.New("keycard applet already installed")
+	ndefRecord                = hexutils.HexToBytes("0024d40f12616e64726f69642e636f6d3a706b67696d2e7374617475732e657468657265756d")
+)
 
 // Installer defines a struct with methods to install applets in a card.
 type Installer struct {
@@ -24,10 +30,16 @@ func NewInstaller(t globalplatform.Transmitter) *Installer {
 }
 
 // Install installs the applet from the specified capFile.
-func (i *Installer) Install(capFile *os.File, overwriteApplet bool) (err error) {
+func (i *Installer) Install(capFile *os.File, overwriteApplet bool) error {
 	logger.Info("installation started")
 	startTime := time.Now()
 	cmdSet := globalplatform.NewCommandSet(i.c)
+
+	logger.Info("check if keycard is already installed")
+	if err := i.checkAppletAlreadyInstalled(cmdSet, overwriteApplet); err != nil {
+		logger.Error("check if keycard is already installed failed", "error", err)
+		return err
+	}
 
 	logger.Info("select ISD")
 	err := cmdSet.Select()
@@ -35,7 +47,6 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) (err error) 
 		logger.Error("select failed", "error", err)
 		return err
 	}
-	logger.Debug("isd retrieved", "isd", hexutils.BytesToHexWithSpaces(isd))
 
 	logger.Info("opening secure channel")
 	if err = cmdSet.OpenSecureChannel(); err != nil {
@@ -73,4 +84,28 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) (err error) 
 	elapsed := time.Now().Sub(startTime)
 	logger.Info(fmt.Sprintf("installation completed in %f seconds", elapsed.Seconds()))
 	return err
+}
+
+func (i *Installer) checkAppletAlreadyInstalled(cmdSet *globalplatform.CommandSet, overwriteApplet bool) error {
+	keycardInstanceAID, err := identifiers.KeycardInstanceAID(1)
+	if err != nil {
+		return err
+	}
+
+	err = cmdSet.SelectAID(keycardInstanceAID)
+	switch e := err.(type) {
+	case *apdu.ErrBadResponse:
+		// keycard applet not found, so not installed yet.
+		if e.Sw == globalplatform.SwFileNotFound {
+			return nil
+		}
+		return err
+	case nil: // selected successfully, so it's already installed
+		if overwriteApplet {
+			return nil
+		}
+		return ErrAppletAlreadyInstalled
+	default:
+		return err
+	}
 }
