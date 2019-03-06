@@ -30,7 +30,7 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) (err error) 
 	cmdSet := globalplatform.NewCommandSet(i.c)
 
 	logger.Info("select ISD")
-	isd, err := cmdSet.Select()
+	err := cmdSet.Select()
 	if err != nil {
 		logger.Error("select failed", "error", err)
 		return err
