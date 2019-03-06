@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-type commandFunc func(*Initializer) error
+type commandFunc func(*scard.Card) error
 
 var (
 	logger = log.New("package", "status-go/cmd/keycard")
@@ -130,9 +130,8 @@ func main() {
 		logger.Debug("card protocol", "T", "unknown")
 	}
 
-	i := NewInitializer(card)
 	if f, ok := commands[command]; ok {
-		err = f(i)
+		err = f(card)
 		if err != nil {
 			logger.Error("error executing command", "command", command, "error", err)
 			os.Exit(1)
@@ -179,7 +178,7 @@ func askUint8(description string) uint8 {
 	return uint8(i)
 }
 
-func commandInstall(i *Initializer) error {
+func commandInstall(card *scard.Card) error {
 	if *flagCapFile == "" {
 		logger.Error("you must specify a cap file path with the -f flag\n")
 		usage()
@@ -191,17 +190,13 @@ func commandInstall(i *Initializer) error {
 	}
 	defer f.Close()
 
-	fmt.Printf("installation can take a while...\n")
-	err = i.Install(f, *flagOverwrite)
-	if err != nil {
-		fail("installation error", "error", err)
-	}
+	i := NewInstaller(card)
 
-	fmt.Printf("applet installed successfully.\n")
-	return nil
+	return i.Install(f, *flagOverwrite)
 }
 
-func commandInfo(i *Initializer) error {
+func commandInfo(card *scard.Card) error {
+	i := NewInitializer(card)
 	info, err := i.Info()
 	if err != nil {
 		return err
@@ -218,7 +213,8 @@ func commandInfo(i *Initializer) error {
 	return nil
 }
 
-func commandDelete(i *Initializer) error {
+func commandDelete(card *scard.Card) error {
+	i := NewInitializer(card)
 	err := i.Delete()
 	if err != nil {
 		return err
@@ -229,7 +225,8 @@ func commandDelete(i *Initializer) error {
 	return nil
 }
 
-func commandInit(i *Initializer) error {
+func commandInit(card *scard.Card) error {
+	i := NewInitializer(card)
 	secrets, err := i.Init()
 	if err != nil {
 		return err
@@ -242,7 +239,8 @@ func commandInit(i *Initializer) error {
 	return nil
 }
 
-func commandPair(i *Initializer) error {
+func commandPair(card *scard.Card) error {
+	i := NewInitializer(card)
 	pairingPass := ask("Pairing password")
 	pin := ask("PIN")
 	info, err := i.Pair(pairingPass, pin)
@@ -256,7 +254,8 @@ func commandPair(i *Initializer) error {
 	return nil
 }
 
-func commandStatus(i *Initializer) error {
+func commandStatus(card *scard.Card) error {
+	i := NewInitializer(card)
 	index := askUint8("Pairing index")
 	key := askHex("Pairing key")
 
