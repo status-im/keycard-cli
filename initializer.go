@@ -178,14 +178,14 @@ func (i *Initializer) initializeUpdate() (*globalplatform.Session, error) {
 	}
 
 	// verify cryptogram and initialize session keys
-	keys := globalplatform.NewKeyProvider(lightwallet.CardTestKey, lightwallet.CardTestKey)
+	keys := globalplatform.NewSCP02Keys(lightwallet.CardTestKey, lightwallet.CardTestKey)
 	session, err := globalplatform.NewSession(keys, resp, hostChallenge)
 
 	return session, err
 }
 
 func (i *Initializer) externalAuthenticate(session *globalplatform.Session) error {
-	encKey := session.KeyProvider().Enc()
+	encKey := session.Keys().Enc()
 	extAuth, err := globalplatform.NewCommandExternalAuthenticate(encKey, session.CardChallenge(), session.HostChallenge())
 	if err != nil {
 		return err
