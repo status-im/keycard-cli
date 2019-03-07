@@ -12,7 +12,7 @@ MacOSX:
 
 ## Installation
 
-`go get github.com/status-im/keycard-go/cmd/keycard`
+`go get -u github.com/status-im/keycard-go/cmd/keycard`
 
 The executable will be installed in `$GOPATH/bin`.
 Check your `$GOPATH` with `go env`.
