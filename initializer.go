@@ -70,7 +70,12 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 // Info returns a types.ApplicationInfo struct with info about the card.
 func (i *Initializer) Info() (types.ApplicationInfo, error) {
 	cmdSet := keycard.NewCommandSet(i.c)
+	logger.Info("select keycard applet")
 	err := cmdSet.Select()
+	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
+		err = nil
+	}
+
 	return cmdSet.ApplicationInfo, err
 }
 
