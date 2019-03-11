@@ -23,7 +23,7 @@ var (
 
 // Initializer defines a struct with methods to install applets and initialize a card.
 type Initializer struct {
-	c globalplatform.Channel
+	c types.Channel
 }
 
 // NewInitializer returns a new Initializer that communicates to Transmitter t.
@@ -31,40 +31,6 @@ func NewInitializer(t globalplatform.Transmitter) *Initializer {
 	return &Initializer{
 		c: globalplatform.NewNormalChannel(t),
 	}
-}
-
-// Install installs the applet from the specified capFile.
-func (i *Initializer) Install(capFile *os.File, overwriteApplet bool) error {
-	info, err := keycard.Select(i.c, identifiers.KeycardAID)
-	if err != nil {
-		return err
-	}
-
-	if info.Installed && !overwriteApplet {
-		return errors.New("applet already installed")
-	}
-
-	err = i.initGPSecureChannel(keycard.CardManagerAID)
-	if err != nil {
-		return err
-	}
-
-	instanceAID, err := identifiers.KeycardInstanceAID(1)
-	if err != nil {
-		return err
-	}
-
-	err = i.deleteAID(identifiers.NdefInstanceAID, instanceAID, identifiers.PackageAID)
-	if err != nil {
-		return err
-	}
-
-	err = i.installApplets(capFile)
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 func (i *Initializer) Init() (*keycard.Secrets, error) {
@@ -94,59 +60,9 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 	return secrets, nil
 }
 
-func (i *Initializer) Pair(pairingPass, pin string) (*types.PairingInfo, error) {
-	appInfo, err := keycard.Select(i.c, identifiers.KeycardAID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !appInfo.Initialized {
-		return nil, ErrNotInitialized
-	}
-
-	return keycard.Pair(i.c, pairingPass, pin)
-}
-
 // Info returns a types.ApplicationInfo struct with info about the card.
 func (i *Initializer) Info() (*types.ApplicationInfo, error) {
 	return keycard.Select(i.c, identifiers.KeycardAID)
-}
-
-// Status returns
-func (i *Initializer) Status(index uint8, key []byte) (*types.ApplicationStatus, error) {
-	info, err := keycard.Select(i.c, identifiers.KeycardAID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !info.Installed {
-		return nil, errAppletNotInstalled
-	}
-
-	if !info.Initialized {
-		return nil, errCardNotInitialized
-	}
-
-	sc, err := keycard.OpenSecureChannel(i.c, info, index, key)
-	if err != nil {
-		return nil, err
-	}
-
-	return keycard.GetStatusApplication(sc)
-}
-
-// Delete deletes the applet and related package from the card.
-func (i *Initializer) Delete() error {
-	err := i.initGPSecureChannel(keycard.CardManagerAID)
-	if err != nil {
-		return err
-	}
-
-	instanceAID, err := identifiers.KeycardInstanceAID(1)
-	if err != nil {
-		return err
-	}
-	return i.deleteAID(identifiers.NdefInstanceAID, instanceAID, identifiers.PackageAID)
 }
 
 func (i *Initializer) initGPSecureChannel(sdaid []byte) error {
@@ -169,7 +85,7 @@ func (i *Initializer) initGPSecureChannel(sdaid []byte) error {
 }
 
 func (i *Initializer) selectAID(aid []byte) error {
-	sel := globalplatform.NewCommandSelect(keycard.CardManagerAID)
+	sel := globalplatform.NewCommandSelect(identifiers.CardManagerAID)
 	_, err := i.send("select", sel)
 
 	return err
@@ -220,7 +136,7 @@ func (i *Initializer) deleteAID(aids ...[]byte) error {
 
 func (i *Initializer) installApplets(capFile *os.File) error {
 	// install for load
-	preLoad := globalplatform.NewCommandInstallForLoad(identifiers.PackageAID, keycard.CardManagerAID)
+	preLoad := globalplatform.NewCommandInstallForLoad(identifiers.PackageAID, identifiers.CardManagerAID)
 	_, err := i.send("install for load", preLoad)
 	if err != nil {
 		return err

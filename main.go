@@ -214,7 +214,7 @@ func commandInfo(card *scard.Card) error {
 }
 
 func commandDelete(card *scard.Card) error {
-	i := NewInitializer(card)
+	i := NewInstaller(card)
 	err := i.Delete()
 	if err != nil {
 		return err

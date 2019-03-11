@@ -10,6 +10,7 @@ import (
 	"github.com/status-im/keycard-go/globalplatform"
 	"github.com/status-im/keycard-go/hexutils"
 	"github.com/status-im/keycard-go/identifiers"
+	"github.com/status-im/keycard-go/types"
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 
 // Installer defines a struct with methods to install applets in a card.
 type Installer struct {
-	c globalplatform.Channel
+	c types.Channel
 }
 
 // NewInstaller returns a new Installer that communicates to Transmitter t.
@@ -84,6 +85,32 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) error {
 	elapsed := time.Now().Sub(startTime)
 	logger.Info(fmt.Sprintf("installation completed in %f seconds", elapsed.Seconds()))
 	return err
+}
+
+// Delete deletes the applet from the card.
+func (i *Installer) Delete() error {
+	cmdSet := globalplatform.NewCommandSet(i.c)
+
+	logger.Info("select ISD")
+	err := cmdSet.Select()
+	if err != nil {
+		logger.Error("select failed", "error", err)
+		return err
+	}
+
+	logger.Info("opening secure channel")
+	if err = cmdSet.OpenSecureChannel(); err != nil {
+		logger.Error("open secure channel failed", "error", err)
+		return err
+	}
+
+	logger.Info("delete old version")
+	if err = cmdSet.DeleteKeycardInstancesAndPackage(); err != nil {
+		logger.Error("delete keycard instances and package failed", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (i *Installer) checkAppletAlreadyInstalled(cmdSet *globalplatform.CommandSet, overwriteApplet bool) error {
