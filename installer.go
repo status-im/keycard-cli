@@ -114,7 +114,7 @@ func (i *Installer) Delete() error {
 }
 
 func (i *Installer) checkAppletAlreadyInstalled(cmdSet *globalplatform.CommandSet, overwriteApplet bool) error {
-	keycardInstanceAID, err := identifiers.KeycardInstanceAID(1)
+	keycardInstanceAID, err := identifiers.KeycardInstanceAID(identifiers.KeycardDefaultInstanceIndex)
 	if err != nil {
 		return err
 	}
