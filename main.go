@@ -48,8 +48,8 @@ func init() {
 		"info":    commandInfo,
 		"delete":  commandDelete,
 		"init":    commandInit,
-		"pair":    commandPair,
-		"status":  commandStatus,
+		// "pair":    commandPair,
+		// "status":  commandStatus,
 	}
 
 	if len(os.Args) < 2 {
@@ -239,35 +239,35 @@ func commandInit(card *scard.Card) error {
 	return nil
 }
 
-func commandPair(card *scard.Card) error {
-	i := NewInitializer(card)
-	pairingPass := ask("Pairing password")
-	pin := ask("PIN")
-	info, err := i.Pair(pairingPass, pin)
-	if err != nil {
-		return err
-	}
+// func commandPair(card *scard.Card) error {
+// 	i := NewInitializer(card)
+// 	pairingPass := ask("Pairing password")
+// 	pin := ask("PIN")
+// 	info, err := i.Pair(pairingPass, pin)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	fmt.Printf("Pairing key 0x%x\n", info.Key)
-	fmt.Printf("Pairing Index %d\n", info.Index)
+// 	fmt.Printf("Pairing key 0x%x\n", info.Key)
+// 	fmt.Printf("Pairing Index %d\n", info.Index)
 
-	return nil
-}
+// 	return nil
+// }
 
-func commandStatus(card *scard.Card) error {
-	i := NewInitializer(card)
-	index := askUint8("Pairing index")
-	key := askHex("Pairing key")
+// func commandStatus(card *scard.Card) error {
+// 	i := NewInitializer(card)
+// 	index := askUint8("Pairing index")
+// 	key := askHex("Pairing key")
 
-	appStatus, err := i.Status(index, key)
-	if err != nil {
-		return err
-	}
+// 	appStatus, err := i.Status(index, key)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
-	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
-	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
-	fmt.Printf("Public key derivation: %v\n", appStatus.PubKeyDerivation)
+// 	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
+// 	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
+// 	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
+// 	fmt.Printf("Public key derivation: %v\n", appStatus.PubKeyDerivation)
 
-	return nil
-}
+// 	return nil
+// }
