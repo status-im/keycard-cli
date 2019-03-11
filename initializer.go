@@ -61,8 +61,11 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 }
 
 // Info returns a types.ApplicationInfo struct with info about the card.
-func (i *Initializer) Info() (*types.ApplicationInfo, error) {
-	return keycard.Select(i.c, identifiers.KeycardAID)
+func (i *Initializer) Info() (types.ApplicationInfo, error) {
+	cmdSet := keycard.NewCommandSet(i.c)
+	err := cmdSet.Select()
+
+	return cmdSet.ApplicationInfo, err
 }
 
 func (i *Initializer) initGPSecureChannel(sdaid []byte) error {
