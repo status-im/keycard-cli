@@ -34,25 +34,32 @@ func NewInitializer(t globalplatform.Transmitter) *Initializer {
 }
 
 func (i *Initializer) Init() (*keycard.Secrets, error) {
+	logger.Info("initialization started")
+	cmdSet := keycard.NewCommandSet(i.c)
+
 	secrets, err := keycard.NewSecrets()
 	if err != nil {
 		return nil, err
 	}
 
-	info, err := keycard.Select(i.c, identifiers.KeycardAID)
+	logger.Info("select keycard applet")
+	err = cmdSet.Select()
 	if err != nil {
+		logger.Error("select failed", "error", err)
 		return nil, err
 	}
 
-	if !info.Installed {
+	if !cmdSet.ApplicationInfo.Installed {
+		logger.Error("initialization failed", "error", errAppletNotInstalled)
 		return nil, errAppletNotInstalled
 	}
 
-	if info.Initialized {
+	if cmdSet.ApplicationInfo.Initialized {
+		logger.Error("initialization failed", "error", errCardAlreadyInitialized)
 		return nil, errCardAlreadyInitialized
 	}
 
-	err = keycard.Init(i.c, info.PublicKey, secrets, identifiers.KeycardAID)
+	err = cmdSet.Init(secrets)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +71,6 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 func (i *Initializer) Info() (types.ApplicationInfo, error) {
 	cmdSet := keycard.NewCommandSet(i.c)
 	err := cmdSet.Select()
-
 	return cmdSet.ApplicationInfo, err
 }
 
