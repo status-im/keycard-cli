@@ -209,6 +209,11 @@ func commandInfo(card *scard.Card) error {
 	fmt.Printf("Version: 0x%x\n", info.Version)
 	fmt.Printf("AvailableSlots: 0x%x\n", info.AvailableSlots)
 	fmt.Printf("KeyUID: 0x%x\n", info.KeyUID)
+	fmt.Printf("Capabilities:\n")
+	fmt.Printf("  Secure channel:%v\n", info.HasSecureChannelCapability())
+	fmt.Printf("  Key management:%v\n", info.HasKeyManagementCapability())
+	fmt.Printf("  Credentials Management:%v\n", info.HasCredentialsManagementCapability())
+	fmt.Printf("  NDEF:%v\n", info.HasNDEFCapability())
 
 	return nil
 }
