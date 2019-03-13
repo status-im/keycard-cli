@@ -68,7 +68,7 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 }
 
 // Info returns a types.ApplicationInfo struct with info about the card.
-func (i *Initializer) Info() (types.ApplicationInfo, error) {
+func (i *Initializer) Info() (*types.ApplicationInfo, error) {
 	logger.Info("info started")
 	cmdSet := keycard.NewCommandSet(i.c)
 
@@ -102,6 +102,41 @@ func (i *Initializer) Pair(pairingPass string) (*types.PairingInfo, error) {
 	logger.Info("pairing")
 	err = cmdSet.Pair(pairingPass)
 	return cmdSet.PairingInfo, err
+}
+
+func (i *Initializer) Status(key []byte, index int) (*types.ApplicationStatus, error) {
+	logger.Info("pairing started")
+	cmdSet := keycard.NewCommandSet(i.c)
+
+	logger.Info("select keycard applet")
+	err := cmdSet.Select()
+	if err != nil {
+		logger.Error("select failed", "error", err)
+		return nil, err
+	}
+
+	if !cmdSet.ApplicationInfo.Initialized {
+		logger.Error("pairing failed", "error", ErrNotInitialized)
+		return nil, ErrNotInitialized
+	}
+
+	logger.Info("open secure channel")
+	cmdSet.SetPairingInfo(key, index)
+	err = cmdSet.OpenSecureChannel()
+	if err != nil {
+		logger.Error("open secure channel failed", "error", err)
+		return nil, err
+	}
+
+	logger.Info("get status")
+	cmdSet.SetPairingInfo(key, index)
+	appStatus, err := cmdSet.GetStatus()
+	if err != nil {
+		logger.Error("get status failed", "error", err)
+		return nil, err
+	}
+
+	return appStatus, nil
 }
 
 func (i *Initializer) initGPSecureChannel(sdaid []byte) error {

@@ -49,7 +49,7 @@ func init() {
 		"delete":  commandDelete,
 		"init":    commandInit,
 		"pair":    commandPair,
-		// "status": commandStatus,
+		"status":  commandStatus,
 	}
 
 	if len(os.Args) < 2 {
@@ -168,14 +168,14 @@ func askHex(description string) []byte {
 	return data
 }
 
-func askUint8(description string) uint8 {
+func askInt(description string) int {
 	s := ask(description)
-	i, err := strconv.ParseUint(s, 10, 8)
+	i, err := strconv.ParseInt(s, 10, 8)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
 
-	return uint8(i)
+	return int(i)
 }
 
 func commandInstall(card *scard.Card) error {
@@ -258,20 +258,20 @@ func commandPair(card *scard.Card) error {
 	return nil
 }
 
-// func commandStatus(card *scard.Card) error {
-// 	i := NewInitializer(card)
-// 	index := askUint8("Pairing index")
-// 	key := askHex("Pairing key")
+func commandStatus(card *scard.Card) error {
+	i := NewInitializer(card)
+	key := askHex("Pairing key")
+	index := askInt("Pairing index")
 
-// 	appStatus, err := i.Status(index, key)
-// 	if err != nil {
-// 		return err
-// 	}
+	appStatus, err := i.Status(key, index)
+	if err != nil {
+		return err
+	}
 
-// 	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
-// 	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
-// 	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
-// 	fmt.Printf("Public key derivation: %v\n", appStatus.PubKeyDerivation)
+	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
+	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
+	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
+	fmt.Printf("Public key derivation: %v\n", appStatus.PubKeyDerivation)
 
-// 	return nil
-// }
+	return nil
+}
