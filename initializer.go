@@ -1,14 +1,11 @@
 package main
 
 import (
-	"crypto/rand"
 	"errors"
-	"fmt"
 
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
-	"github.com/status-im/keycard-go/identifiers"
 	"github.com/status-im/keycard-go/types"
 )
 
@@ -137,89 +134,4 @@ func (i *Initializer) Status(key []byte, index int) (*types.ApplicationStatus, e
 	}
 
 	return appStatus, nil
-}
-
-func (i *Initializer) initGPSecureChannel(sdaid []byte) error {
-	// select card manager
-	err := i.selectAID(sdaid)
-	if err != nil {
-		return err
-	}
-
-	// initialize update
-	session, err := i.initializeUpdate()
-	if err != nil {
-		return err
-	}
-
-	i.c = globalplatform.NewSecureChannel(session, i.c)
-
-	// external authenticate
-	return i.externalAuthenticate(session)
-}
-
-func (i *Initializer) selectAID(aid []byte) error {
-	sel := globalplatform.NewCommandSelect(identifiers.CardManagerAID)
-	_, err := i.send("select", sel)
-
-	return err
-}
-
-func (i *Initializer) initializeUpdate() (*globalplatform.Session, error) {
-	hostChallenge, err := generateHostChallenge()
-	if err != nil {
-		return nil, err
-	}
-
-	init := globalplatform.NewCommandInitializeUpdate(hostChallenge)
-	resp, err := i.send("initialize update", init)
-	if err != nil {
-		return nil, err
-	}
-
-	// verify cryptogram and initialize session keys
-	keys := globalplatform.NewSCP02Keys(identifiers.CardTestKey, identifiers.CardTestKey)
-	session, err := globalplatform.NewSession(keys, resp, hostChallenge)
-
-	return session, err
-}
-
-func (i *Initializer) externalAuthenticate(session *globalplatform.Session) error {
-	encKey := session.Keys().Enc()
-	extAuth, err := globalplatform.NewCommandExternalAuthenticate(encKey, session.CardChallenge(), session.HostChallenge())
-	if err != nil {
-		return err
-	}
-
-	_, err = i.send("external authenticate", extAuth)
-
-	return err
-}
-
-func (i *Initializer) send(description string, cmd *apdu.Command, allowedResponses ...uint16) (*apdu.Response, error) {
-	logger.Debug("sending apdu command", "name", description)
-	resp, err := i.c.Send(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(allowedResponses) == 0 {
-		allowedResponses = []uint16{apdu.SwOK}
-	}
-
-	for _, code := range allowedResponses {
-		if code == resp.Sw {
-			return resp, nil
-		}
-	}
-
-	err = fmt.Errorf("unexpected response from command %s: %x", description, resp.Sw)
-
-	return nil, err
-}
-
-func generateHostChallenge() ([]byte, error) {
-	c := make([]byte, 8)
-	_, err := rand.Read(c)
-	return c, err
 }
