@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"os"
 
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
@@ -59,6 +58,7 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 		return nil, errCardAlreadyInitialized
 	}
 
+	logger.Info("initializing")
 	err = cmdSet.Init(secrets)
 	if err != nil {
 		return nil, err
@@ -69,14 +69,39 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 
 // Info returns a types.ApplicationInfo struct with info about the card.
 func (i *Initializer) Info() (types.ApplicationInfo, error) {
+	logger.Info("info started")
 	cmdSet := keycard.NewCommandSet(i.c)
+
 	logger.Info("select keycard applet")
 	err := cmdSet.Select()
 	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
 		err = nil
+	} else {
+		logger.Error("select failed", "error", err)
 	}
 
 	return cmdSet.ApplicationInfo, err
+}
+
+func (i *Initializer) Pair(pairingPass string) (*types.PairingInfo, error) {
+	logger.Info("pairing started")
+	cmdSet := keycard.NewCommandSet(i.c)
+
+	logger.Info("select keycard applet")
+	err := cmdSet.Select()
+	if err != nil {
+		logger.Error("select failed", "error", err)
+		return nil, err
+	}
+
+	if !cmdSet.ApplicationInfo.Initialized {
+		logger.Error("pairing failed", "error", ErrNotInitialized)
+		return nil, ErrNotInitialized
+	}
+
+	logger.Info("pairing")
+	err = cmdSet.Pair(pairingPass)
+	return cmdSet.PairingInfo, err
 }
 
 func (i *Initializer) initGPSecureChannel(sdaid []byte) error {
@@ -132,57 +157,6 @@ func (i *Initializer) externalAuthenticate(session *globalplatform.Session) erro
 	}
 
 	_, err = i.send("external authenticate", extAuth)
-
-	return err
-}
-
-func (i *Initializer) deleteAID(aids ...[]byte) error {
-	for _, aid := range aids {
-		del := globalplatform.NewCommandDelete(aid)
-		_, err := i.send("delete", del, globalplatform.SwOK, globalplatform.SwReferencedDataNotFound)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (i *Initializer) installApplets(capFile *os.File) error {
-	// install for load
-	preLoad := globalplatform.NewCommandInstallForLoad(identifiers.PackageAID, identifiers.CardManagerAID)
-	_, err := i.send("install for load", preLoad)
-	if err != nil {
-		return err
-	}
-
-	// load
-	load, err := globalplatform.NewLoadCommandStream(capFile)
-	if err != nil {
-		return err
-	}
-
-	for load.Next() {
-		cmd := load.GetCommand()
-		_, err = i.send(fmt.Sprintf("load %d of 40", load.Index()+1), cmd)
-		if err != nil {
-			return err
-		}
-	}
-
-	installNdef := globalplatform.NewCommandInstallForInstall(identifiers.PackageAID, identifiers.NdefAID, identifiers.NdefInstanceAID, []byte{})
-	_, err = i.send("install for install (ndef)", installNdef)
-	if err != nil {
-		return err
-	}
-
-	instanceAID, err := identifiers.KeycardInstanceAID(1)
-	if err != nil {
-		return err
-	}
-
-	installWallet := globalplatform.NewCommandInstallForInstall(identifiers.PackageAID, identifiers.KeycardAID, instanceAID, []byte{})
-	_, err = i.send("install for install (wallet)", installWallet)
 
 	return err
 }
