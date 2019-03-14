@@ -33,7 +33,7 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 	logger.Info("initialization started")
 	cmdSet := keycard.NewCommandSet(i.c)
 
-	secrets, err := keycard.NewSecrets()
+	secrets, err := keycard.GenerateSecrets()
 	if err != nil {
 		return nil, err
 	}
