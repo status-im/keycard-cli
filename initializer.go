@@ -71,10 +71,12 @@ func (i *Initializer) Info() (*types.ApplicationInfo, error) {
 
 	logger.Info("select keycard applet")
 	err := cmdSet.Select()
-	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
-		err = nil
-	} else {
-		logger.Error("select failed", "error", err)
+	if err != nil {
+		if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
+			err = nil
+		} else {
+			logger.Error("select failed", "error", err)
+		}
 	}
 
 	return cmdSet.ApplicationInfo, err
