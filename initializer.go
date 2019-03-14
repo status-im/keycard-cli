@@ -126,7 +126,6 @@ func (i *Initializer) Status(key []byte, index int) (*types.ApplicationStatus, e
 	}
 
 	logger.Info("get status")
-	cmdSet.SetPairingInfo(key, index)
 	appStatus, err := cmdSet.GetStatus()
 	if err != nil {
 		logger.Error("get status failed", "error", err)
