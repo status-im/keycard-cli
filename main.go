@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	stdlog "log"
@@ -277,6 +278,11 @@ func commandStatus(card *scard.Card) error {
 }
 
 func commandShell(card *scard.Card) error {
-	s := NewShell(card)
-	return s.Run()
+	fi, _ := os.Stdin.Stat()
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		s := NewShell(card)
+		return s.Run()
+	} else {
+		return errors.New("non interactive shell. you must pipe commands")
+	}
 }
