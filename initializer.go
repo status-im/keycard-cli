@@ -129,7 +129,7 @@ func (i *Initializer) Status(key []byte, index int) (*types.ApplicationStatus, e
 	}
 
 	logger.Info("get status")
-	appStatus, err := cmdSet.GetStatus()
+	appStatus, err := cmdSet.GetStatusApplication()
 	if err != nil {
 		logger.Error("get status failed", "error", err)
 		return nil, err

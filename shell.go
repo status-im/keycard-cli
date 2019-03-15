@@ -317,16 +317,24 @@ func (s *Shell) commandKeycardGetStatus(args ...string) error {
 		return err
 	}
 
-	logger.Info("get status")
-	appStatus, err := s.kCmdSet.GetStatus()
+	logger.Info("get status application")
+	appStatus, err := s.kCmdSet.GetStatusApplication()
 	if err != nil {
-		logger.Error("get status failed", "error", err)
+		logger.Error("get status application failed", "error", err)
+		return err
+	}
+
+	logger.Info("get status key path")
+	keyStatus, err := s.kCmdSet.GetStatusKeyPath()
+	if err != nil {
+		logger.Error("get status key path failed", "error", err)
 		return err
 	}
 
 	s.write(fmt.Sprintf("STATUS - PIN RETRY COUNT: %d\n", appStatus.PinRetryCount))
 	s.write(fmt.Sprintf("STATUS - PUK RETRY COUNT: %d\n", appStatus.PUKRetryCount))
 	s.write(fmt.Sprintf("STATUS - KEY INITIALIZED: %v\n", appStatus.KeyInitialized))
+	s.write(fmt.Sprintf("STATUS - KEY PATH: %v\n", keyStatus.Path))
 
 	return nil
 }
