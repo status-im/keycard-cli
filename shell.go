@@ -42,6 +42,7 @@ func NewShell(t globalplatform.Transmitter) *Shell {
 	}
 
 	s.commands = map[string]shellCommand{
+		"gp-send-apdu":                s.commandGPSendAPDU,
 		"gp-select":                   s.commandGPSelect,
 		"gp-open-secure-channel":      s.commandGPOpenSecureChannel,
 		"gp-delete":                   s.commandGPDelete,
@@ -86,6 +87,27 @@ func (s *Shell) Run() error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (s *Shell) commandGPSendAPDU(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	apdu, err := hex.DecodeString(args[0])
+	if err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("send apdu %x", apdu))
+	resp, err := s.t.Transmit(apdu)
+	if err != nil {
+		logger.Error("send apdu failed", "error", err)
+		return err
+	}
+	logger.Info(fmt.Sprintf("raw response: %x", resp))
 
 	return nil
 }
