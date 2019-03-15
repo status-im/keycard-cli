@@ -229,8 +229,25 @@ func (s *Shell) commandKeycardSelect(args ...string) error {
 		return err
 	}
 
+	logger.Info("select keycard")
 	err := s.kCmdSet.Select()
+	info := s.kCmdSet.ApplicationInfo
+
+	s.write(fmt.Sprintf("Installed: %+v\n", info.Installed))
+	s.write(fmt.Sprintf("Initialized: %+v\n", info.Initialized))
+	s.write(fmt.Sprintf("InstanceUID: %x\n", info.InstanceUID))
+	s.write(fmt.Sprintf("SecureChannelPublicKey: %x\n", info.SecureChannelPublicKey))
+	s.write(fmt.Sprintf("Version: %x\n", info.Version))
+	s.write(fmt.Sprintf("AvailableSlots: %x\n", info.AvailableSlots))
+	s.write(fmt.Sprintf("KeyUID: %x\n", info.KeyUID))
+	s.write(fmt.Sprintf("Capabilities:\n"))
+	s.write(fmt.Sprintf("  Secure channel:%v\n", info.HasSecureChannelCapability()))
+	s.write(fmt.Sprintf("  Key management:%v\n", info.HasKeyManagementCapability()))
+	s.write(fmt.Sprintf("  Credentials Management:%v\n", info.HasCredentialsManagementCapability()))
+	s.write(fmt.Sprintf("  NDEF:%v\n", info.HasNDEFCapability()))
+
 	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
+		logger.Error("select keycard failed", "error", err)
 		return ErrNotInstalled
 	}
 
@@ -286,7 +303,13 @@ func (s *Shell) commandKeycardOpenSecureChannel(args ...string) error {
 		return errors.New("cannot open secure channel without setting pairing info")
 	}
 
-	return s.kCmdSet.OpenSecureChannel()
+	logger.Info("open keycard secure channel")
+	if err := s.kCmdSet.OpenSecureChannel(); err != nil {
+		logger.Error("open keycard secure channel failed", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *Shell) commandKeycardGetStatus(args ...string) error {
