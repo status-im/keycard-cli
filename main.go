@@ -50,6 +50,7 @@ func init() {
 		"init":    commandInit,
 		"pair":    commandPair,
 		"status":  commandStatus,
+		"shell":   commandShell,
 	}
 
 	if len(os.Args) < 2 {
@@ -273,4 +274,9 @@ func commandStatus(card *scard.Card) error {
 	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
 
 	return nil
+}
+
+func commandShell(card *scard.Card) error {
+	s := NewShell(card)
+	return s.Run()
 }
