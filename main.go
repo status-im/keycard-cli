@@ -271,7 +271,6 @@ func commandStatus(card *scard.Card) error {
 	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
 	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
 	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
-	fmt.Printf("Public key derivation: %v\n", appStatus.PubKeyDerivation)
 
 	return nil
 }
