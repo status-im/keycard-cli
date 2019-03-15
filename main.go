@@ -205,7 +205,7 @@ func commandInfo(card *scard.Card) error {
 	fmt.Printf("Installed: %+v\n", info.Installed)
 	fmt.Printf("Initialized: %+v\n", info.Initialized)
 	fmt.Printf("InstanceUID: 0x%x\n", info.InstanceUID)
-	fmt.Printf("PublicKey: 0x%x\n", info.PublicKey)
+	fmt.Printf("SecureChannelPublicKey: 0x%x\n", info.SecureChannelPublicKey)
 	fmt.Printf("Version: 0x%x\n", info.Version)
 	fmt.Printf("AvailableSlots: 0x%x\n", info.AvailableSlots)
 	fmt.Printf("KeyUID: 0x%x\n", info.KeyUID)
