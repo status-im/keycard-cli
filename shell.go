@@ -59,6 +59,7 @@ func NewShell(t globalplatform.Transmitter) *Shell {
 		"keycard-generate-key":        s.commandKeycardGenerateKey,
 		"keycard-derive-key":          s.commandKeycardDeriveKey,
 		"keycard-sign":                s.commandKeycardSign,
+		"keycard-set-pinless-path":    s.commandKeycardSetPinlessPath,
 	}
 
 	return s
@@ -426,6 +427,20 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
 	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
 	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardSetPinlessPath(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("set pinless path %s", args[0]))
+	if err := s.kCmdSet.SetPinlessPath(args[0]); err != nil {
+		logger.Error("set pinless path failed", "error", err)
+		return err
+	}
 
 	return nil
 }
