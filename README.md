@@ -1,6 +1,6 @@
-# keycard
+# keycard-cli
 
-`keycard` is a command line tool you can use to initialize a smartcard with the [Status Keycard](https://github.com/status-im/status-keycard).
+`keycard-cli` is a command line tool to manage [Status Keycards](https://github.com/status-im/status-keycard).
 
 ## Dependencies
 
@@ -12,7 +12,7 @@ MacOSX:
 
 ## Installation
 
-`go get -u github.com/status-im/keycard-go/cmd/keycard`
+`go get -u github.com/status-im/keycard-cli`
 
 The executable will be installed in `$GOPATH/bin`.
 Check your `$GOPATH` with `go env`.
@@ -70,11 +70,3 @@ Pairing password: RandomPairingPassword
 ```bash
 keycard delete -l debug
 ```
-
-### Pairing
-
-```bash
-keycard pair -l debug
-```
-
-The process will ask for `PairingPassword` and `PIN` and will generate a pairing key you can use to interact with the card.
