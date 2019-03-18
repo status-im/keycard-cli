@@ -4,7 +4,7 @@
 
 ## Dependencies
 
-To install `keycard-go` you need `go` in your system.
+To install `keycard-cli` you need `go` in your system.
 
 MacOSX:
 
