@@ -3,7 +3,7 @@
 `keycard-cli` is a command line tool to manage [Status Keycards](https://github.com/status-im/status-keycard).
 
 * [Dependencies](#dependencies)
-* [Installation](#intallation)
+* [Installation](#installation)
 * [Card info](#card-info)
 * [Keycard applet installation](#keycard-applet-installation)
 * [Card initialization](#card-initialization)
