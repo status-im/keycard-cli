@@ -2,18 +2,18 @@
 
 
 [[projects]]
-  digest = "1:477f6df8a1915abb180d730179a4a45212328effdf98cc6ca5b0e5741db00125"
+  digest = "1:7209f104c3943d726421d741398b2de740113436df6243169c7b7615e3c1f012"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "2e60448ffcc6bf78332d1fe590260095f554dd78"
 
 [[projects]]
   branch = "master"
-  digest = "1:6d891a7eab2c0cb3d466ad175c9fab506c625af2e14b5719d46fba8b2526b05c"
+  digest = "1:0b5b8e2a576b4204366fa8e6e638eab73a88a2bea4689744205a1e239e60ef29"
   name = "github.com/ebfe/scard"
   packages = ["."]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "c3d1b1916a9547038c82830d7e99fa36b85a2682"
 
 [[projects]]
@@ -33,16 +33,16 @@
   version = "v1.8.23"
 
 [[projects]]
-  digest = "1:33542eaf895b5489ccfb059502a721f0e8875379da8b3ff60fdd9212d503705c"
+  digest = "1:8cf58169eb0a8c009ed3a4c36486980d602ab4cc4e478130493d6cd0404f889b"
   name = "github.com/go-stack/stack"
   packages = ["."]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "54be5f394ed2c3e19dac9134a40a95ba5a017f7b"
   version = "v1.5.4"
 
 [[projects]]
   branch = "develop"
-  digest = "1:0ecee6b41c7f26d8325c48a5266ed2f24f766b5aab4cb2675d51b99018ab25f4"
+  digest = "1:9732855298c5522b25234e718d3d42d9d21b2c2ed6ffd49c18a9c102c50b290c"
   name = "github.com/status-im/keycard-go"
   packages = [
     ".",
@@ -55,8 +55,8 @@
     "identifiers",
     "types",
   ]
-  pruneopts = "UT"
-  revision = "bae6af1f296c90b95c55d296fa1db426cd7c5def"
+  pruneopts = "NUT"
+  revision = "72d8e3de8b61c902cebf29a7bec348ea9b425173"
 
 [[projects]]
   branch = "master"
@@ -66,18 +66,18 @@
     "pbkdf2",
     "sha3",
   ]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "a1f597ede03a7bef967a422b5b3a5bd08805a01e"
 
 [[projects]]
   branch = "master"
-  digest = "1:d3229d0c4f5a29399fe3d39cd64de216af15f8bce9a00932c0a7a5ddaa6418f7"
+  digest = "1:40fb5cd8ff5b2b511fb142e3b14352310888822f324f18e4c840be52bfa1a373"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "6c81ef8f67ca3f42fc9cd71dfbd5f35b0c4b5771"
 
 [[projects]]
@@ -91,7 +91,7 @@
     "unicode/cldr",
     "unicode/norm",
   ]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 

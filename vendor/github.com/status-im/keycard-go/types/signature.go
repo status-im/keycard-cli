@@ -51,6 +51,10 @@ func ParseSignature(message, resp []byte) (*Signature, error) {
 	}, nil
 }
 
+func (s *Signature) PubKey() []byte {
+	return s.pubKey
+}
+
 func (s *Signature) R() []byte {
 	return s.r
 }

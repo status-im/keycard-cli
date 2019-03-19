@@ -27,9 +27,10 @@ type Secrets struct {
 
 func NewSecrets(pin, puk, pairingPass string) *Secrets {
 	return &Secrets{
-		pin:         pin,
-		puk:         puk,
-		pairingPass: pairingPass,
+		pin:          pin,
+		puk:          puk,
+		pairingPass:  pairingPass,
+		pairingToken: generatePairingToken(pairingPass),
 	}
 }
 

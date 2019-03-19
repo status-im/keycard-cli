@@ -24,6 +24,14 @@
 #   go-tests = true
 #   unused-packages = true
 
+[prune]
+  unused-packages = true
+  go-tests = true
+  non-go = true
+
+  [[prune.project]]
+    name = "github.com/ethereum/go-ethereum"
+    non-go = false
 
 [[constraint]]
   branch = "master"
@@ -36,7 +44,3 @@
 [[constraint]]
   branch = "develop"
   name = "github.com/status-im/keycard-go"
-
-[prune]
-  go-tests = true
-  unused-packages = true
