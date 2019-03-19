@@ -446,8 +446,8 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 		return err
 	}
 
+	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
 	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
-	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
 	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
 	s.write(fmt.Sprintf("PUBLIC KEY: %x\n", sig.PubKey()))
 
