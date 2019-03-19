@@ -223,16 +223,38 @@ func (s *Shell) commandKeycardInit(args ...string) error {
 		return err
 	}
 
-	i := NewInitializer(s.t)
-	secrets, err := i.Init()
+	if s.kCmdSet.ApplicationInfo == nil {
+		return errors.New("keycard applet not selected")
+	}
+
+	if !s.kCmdSet.ApplicationInfo.Installed {
+		return errAppletNotInstalled
+	}
+
+	if s.kCmdSet.ApplicationInfo.Initialized {
+		return errCardAlreadyInitialized
+	}
+
+	if s.secrets == nil {
+		secrets, err := keycard.GenerateSecrets()
+		if err != nil {
+			logger.Error("secrets generation failed", "error", err)
+			return err
+		}
+
+		s.secrets = secrets
+	}
+
+	logger.Info("initializing")
+	err := s.kCmdSet.Init(s.secrets)
 	if err != nil {
+		logger.Error("initialization failed", "error", err)
 		return err
 	}
 
-	s.secrets = secrets
-	s.write(fmt.Sprintf("PIN: %s\n", secrets.Pin()))
-	s.write(fmt.Sprintf("PUK: %s\n", secrets.Puk()))
-	s.write(fmt.Sprintf("PAIRING PASSWORD: %s\n", secrets.PairingPass()))
+	s.write(fmt.Sprintf("PIN: %s\n", s.secrets.Pin()))
+	s.write(fmt.Sprintf("PUK: %s\n", s.secrets.Puk()))
+	s.write(fmt.Sprintf("PAIRING PASSWORD: %s\n", s.secrets.PairingPass()))
 
 	return nil
 }
