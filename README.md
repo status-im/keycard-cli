@@ -4,11 +4,12 @@
 
 * [Dependencies](#dependencies)
 * [Installation](#installation)
-* [Card info](#card-info)
-* [Keycard applet installation](#keycard-applet-installation)
-* [Card initialization](#card-initialization)
-* [Deleting the applet](#deleting-the-applet)
-* [Keycard shell](#keycard-shell)
+* CLI Commands
+  * [Card info](#card-info)
+  * [Keycard applet installation](#keycard-applet-installation)
+  * [Card initialization](#card-initialization)
+  * [Deleting the applet](#deleting-the-applet)
+  * [Keycard shell](#keycard-shell)
 
 ## Dependencies
 
