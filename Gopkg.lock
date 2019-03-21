@@ -17,7 +17,7 @@
   revision = "c3d1b1916a9547038c82830d7e99fa36b85a2682"
 
 [[projects]]
-  digest = "1:b4f51e6d41be95f248303770c5a1f0abc8b09d0256140c23d06c889e794aa782"
+  digest = "1:e8583198a1af2d191fa9759276fbf5d565bdcb3e09aa0ed4a0853e18e45587bd"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     "common",
@@ -28,7 +28,7 @@
     "log",
     "rlp",
   ]
-  pruneopts = "UT"
+  pruneopts = "NT"
   revision = "c942700427557e3ff6de3aaf6b916e2f056c1ec2"
   version = "v1.8.23"
 
