@@ -18,4 +18,5 @@ build-docker-image:
 	docker build -t $(DOCKER_IMAGE_NAME) -f _assets/Dockerfile .
 
 build-platforms:
-	xgo -image $(DOCKER_IMAGE_NAME) --dest $(GOBIN) --targets=linux/amd64,windows/amd64 ./cmd/$(BIN_NAME)
+	xgo -image $(DOCKER_IMAGE_NAME) --dest $(GOBIN) --targets=linux/amd64,windows/amd64 .
+
