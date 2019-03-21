@@ -31,7 +31,7 @@ Check your `$GOPATH` with `go env`.
 ### Card info
 
 ```bash
-keycard info -l debug
+keycard-cli info -l debug
 ```
 
 The `info` command will print something like this:
@@ -51,7 +51,7 @@ The `install` command will install an applet to the card.
 You can download the status `cap` file from the [status-im/status-keycard releases page](https://github.com/status-im/status-keycard/releases).
 
 ```bash
-keycard install -l debug -a PATH_TO_CAP_FILE
+keycard-cli install -l debug -a PATH_TO_CAP_FILE
 ```
 
 In case the applet is already installed and you want to force a new installation you can pass the `-f` flag.
@@ -61,7 +61,7 @@ In case the applet is already installed and you want to force a new installation
 
 
 ```bash
-keycard init -l debug
+keycard-cli init -l debug
 ```
 
 The `init` command initializes the card and generates the secrets needed to pair the card to a device.
@@ -77,7 +77,7 @@ Pairing password: RandomPairingPassword
 :warning: **WARNING! This command will remove the applet and all the keys from the card.** :warning:
 
 ```bash
-keycard delete -l debug
+keycard-cli delete -l debug
 ```
 
 ### Keycard shell
