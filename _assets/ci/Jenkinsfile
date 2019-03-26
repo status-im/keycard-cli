@@ -1,0 +1,68 @@
+pipeline {
+  agent { label 'linux' }
+
+  options {
+    /* manage how many builds we keep */
+    buildDiscarder(logRotator(
+      numToKeepStr: '20',
+      daysToKeepStr: '30',
+    ))
+    disableConcurrentBuilds()
+    /* Go requires a certain directory structure */
+    checkoutToSubdirectory('src/github.com/status-im/keycard-cli')
+  }
+
+  environment {
+    PROJECT = 'src/github.com/status-im/keycard-cli'
+    GOPATH  = "${env.WORKSPACE}"
+    PATH    = "${env.PATH}:${env.GOPATH}/bin"
+  }
+
+  stages {
+    stage('Prep') {
+      steps { dir(env.PROJECT) {
+        sh 'make deps'
+      } }
+    }
+
+    stage('Test') {
+      agent {
+        docker { 
+          label 'linux'
+          image 'statusteam/keycard-cli-ci:latest'
+          args '--entrypoint=""' /* allows jenkins use cat */
+        }
+      }
+      options {
+        checkoutToSubdirectory('src/github.com/status-im/keycard-cli')
+      }
+      steps { dir(env.PROJECT) {
+        sh 'make test'
+      } }
+    }
+
+    stage('Build') {
+      steps { script { dir(env.PROJECT) {
+        sh 'make build-platforms'
+      } } }
+    }
+
+    stage('Archive') {
+      steps { dir(env.PROJECT) {
+        archiveArtifacts('build/bin/*')
+      } }
+    }
+
+    stage('Release') {
+      steps { dir(env.PROJECT) {
+        withCredentials([usernamePassword(
+          credentialsId:  'status-im-auto',
+          usernameVariable: 'GITHUB_USER_NAME',
+          passwordVariable: 'GITHUB_TOKEN'
+        )]) {
+          sh 'make release'
+        }
+      } }
+    }
+  }
+}
