@@ -4,6 +4,7 @@
 
 * [Dependencies](#dependencies)
 * [Installation](#installation)
+* [Continuous Integration](#continuous-integration)
 * CLI Commands
   * [Card info](#card-info)
   * [Keycard applet installation](#keycard-applet-installation)
@@ -25,6 +26,15 @@ MacOSX:
 
 The executable will be installed in `$GOPATH/bin`.
 Check your `$GOPATH` with `go env`.
+
+## Continuous Integration
+
+Jenkins builds provide:
+
+* [PR Builds](https://ci.status.im/job/status-keycard/job/prs/job/keycard-cli/) - Run only the `test` and `build` targets.
+* [Manual Builds](https://ci.status.im/job/status-keycard/job/keycard-cli/) - Create GitHub release draft with binaries for 3 platforms.
+
+Successful PR builds are mandatory.
 
 ## Usage
 
