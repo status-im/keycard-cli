@@ -10,6 +10,7 @@ import (
 	"github.com/status-im/keycard-go/globalplatform"
 	"github.com/status-im/keycard-go/hexutils"
 	"github.com/status-im/keycard-go/identifiers"
+	keycardio "github.com/status-im/keycard-go/io"
 	"github.com/status-im/keycard-go/types"
 )
 
@@ -24,9 +25,9 @@ type Installer struct {
 }
 
 // NewInstaller returns a new Installer that communicates to Transmitter t.
-func NewInstaller(t globalplatform.Transmitter) *Installer {
+func NewInstaller(t keycardio.Transmitter) *Installer {
 	return &Installer{
-		c: globalplatform.NewNormalChannel(t),
+		c: keycardio.NewNormalChannel(t),
 	}
 }
 

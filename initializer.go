@@ -6,6 +6,7 @@ import (
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
+	"github.com/status-im/keycard-go/io"
 	"github.com/status-im/keycard-go/types"
 )
 
@@ -24,9 +25,9 @@ type Initializer struct {
 }
 
 // NewInitializer returns a new Initializer that communicates to Transmitter t.
-func NewInitializer(t globalplatform.Transmitter) *Initializer {
+func NewInitializer(t io.Transmitter) *Initializer {
 	return &Initializer{
-		c: globalplatform.NewNormalChannel(t),
+		c: io.NewNormalChannel(t),
 	}
 }
 
