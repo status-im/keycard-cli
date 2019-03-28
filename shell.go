@@ -22,14 +22,79 @@ import (
 
 type shellCommand = func(args ...string) error
 
+type TemplateFuncs struct {
+	s *Shell
+}
+
+func (t *TemplateFuncs) FuncMap() template.FuncMap {
+	return template.FuncMap{
+		"env":                      t.Env,
+		"session_pairing_key":      t.SessionPairingKey,
+		"session_pairing_index":    t.SessionPairingIndex,
+		"session_pin":              t.SessionPIN,
+		"session_puk":              t.SessionPUK,
+		"session_pairing_password": t.SessionPairingPassword,
+	}
+}
+
+func (t *TemplateFuncs) Env(name string) (string, error) {
+	value := os.Getenv(name)
+	if value == "" {
+		return "", fmt.Errorf("env variable is empty: %s", name)
+	}
+
+	return value, nil
+}
+
+func (t *TemplateFuncs) SessionPairingKey() (string, error) {
+	if t.s.kCmdSet.PairingInfo == nil {
+		return "", errors.New("pairing key not known")
+	}
+
+	return fmt.Sprintf("%x", t.s.kCmdSet.PairingInfo.Key), nil
+}
+
+func (t *TemplateFuncs) SessionPairingIndex() (string, error) {
+	if t.s.kCmdSet.PairingInfo == nil {
+		return "", errors.New("pairing index not known")
+	}
+
+	return fmt.Sprintf("%d", t.s.kCmdSet.PairingInfo.Index), nil
+}
+
+func (t *TemplateFuncs) SessionPIN() (string, error) {
+	if t.s.Secrets == nil {
+		return "", errors.New("pin is not set")
+	}
+
+	return t.s.Secrets.Pin(), nil
+}
+
+func (t *TemplateFuncs) SessionPUK() (string, error) {
+	if t.s.Secrets == nil {
+		return "", errors.New("puk is not set")
+	}
+
+	return t.s.Secrets.Puk(), nil
+}
+
+func (t *TemplateFuncs) SessionPairingPassword() (string, error) {
+	if t.s.Secrets == nil {
+		return "", errors.New("pairing password is not set")
+	}
+
+	return t.s.Secrets.PairingPass(), nil
+}
+
 type Shell struct {
-	t        keycardio.Transmitter
-	c        types.Channel
-	secrets  *keycard.Secrets
-	gpCmdSet *globalplatform.CommandSet
-	kCmdSet  *keycard.CommandSet
-	commands map[string]shellCommand
-	out      *bytes.Buffer
+	t          keycardio.Transmitter
+	c          types.Channel
+	Secrets    *keycard.Secrets
+	gpCmdSet   *globalplatform.CommandSet
+	kCmdSet    *keycard.CommandSet
+	commands   map[string]shellCommand
+	out        *bytes.Buffer
+	tplFuncMap template.FuncMap
 }
 
 func NewShell(t keycardio.Transmitter) *Shell {
@@ -42,6 +107,9 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		gpCmdSet: globalplatform.NewCommandSet(c),
 		out:      new(bytes.Buffer),
 	}
+
+	tplFuncs := &TemplateFuncs{s}
+	s.tplFuncMap = tplFuncs.FuncMap()
 
 	s.commands = map[string]shellCommand{
 		"echo":                          s.commandEcho,
@@ -249,26 +317,26 @@ func (s *Shell) commandKeycardInit(args ...string) error {
 		return errCardAlreadyInitialized
 	}
 
-	if s.secrets == nil {
+	if s.Secrets == nil {
 		secrets, err := keycard.GenerateSecrets()
 		if err != nil {
 			logger.Error("secrets generation failed", "error", err)
 			return err
 		}
 
-		s.secrets = secrets
+		s.Secrets = secrets
 	}
 
 	logger.Info("initializing")
-	err := s.kCmdSet.Init(s.secrets)
+	err := s.kCmdSet.Init(s.Secrets)
 	if err != nil {
 		logger.Error("initialization failed", "error", err)
 		return err
 	}
 
-	s.write(fmt.Sprintf("PIN: %s\n", s.secrets.Pin()))
-	s.write(fmt.Sprintf("PUK: %s\n", s.secrets.Puk()))
-	s.write(fmt.Sprintf("PAIRING PASSWORD: %s\n", s.secrets.PairingPass()))
+	s.write(fmt.Sprintf("PIN: %s\n", s.Secrets.Pin()))
+	s.write(fmt.Sprintf("PUK: %s\n", s.Secrets.Puk()))
+	s.write(fmt.Sprintf("PAIRING PASSWORD: %s\n", s.Secrets.PairingPass()))
 
 	return nil
 }
@@ -278,7 +346,7 @@ func (s *Shell) commandKeycardSetSecrets(args ...string) error {
 		return err
 	}
 
-	s.secrets = keycard.NewSecrets(args[0], args[1], args[2])
+	s.Secrets = keycard.NewSecrets(args[0], args[1], args[2])
 
 	return nil
 }
@@ -318,12 +386,12 @@ func (s *Shell) commandKeycardPair(args ...string) error {
 		return err
 	}
 
-	if s.secrets == nil {
+	if s.Secrets == nil {
 		return errors.New("cannot pair without setting secrets")
 	}
 
 	logger.Info("pair")
-	err := s.kCmdSet.Pair(s.secrets.PairingPass())
+	err := s.kCmdSet.Pair(s.Secrets.PairingPass())
 	if err != nil {
 		logger.Error("pair failed", "error", err)
 		return err
@@ -347,7 +415,7 @@ func (s *Shell) commandKeycardUnpair(args ...string) error {
 
 	index := uint8(indexInt)
 
-	if s.secrets == nil {
+	if s.Secrets == nil {
 		return errors.New("cannot unpair without setting secrets")
 	}
 
@@ -641,53 +709,7 @@ func (s *Shell) parseHex(str string) ([]byte, error) {
 }
 
 func (s *Shell) evalTemplate(text string) (string, error) {
-	funcMap := template.FuncMap{
-		"env": func(name string) (string, error) {
-			value := os.Getenv(name)
-			if value == "" {
-				return "", fmt.Errorf("env variable is empty: %s", name)
-			}
-
-			return value, nil
-		},
-		"session_pairing_key": func() (string, error) {
-			if s.kCmdSet.PairingInfo == nil {
-				return "", errors.New("pairing key not known")
-			}
-
-			return fmt.Sprintf("%x", s.kCmdSet.PairingInfo.Key), nil
-		},
-		"session_pairing_index": func() (string, error) {
-			if s.kCmdSet.PairingInfo == nil {
-				return "", errors.New("pairing index not known")
-			}
-
-			return fmt.Sprintf("%d", s.kCmdSet.PairingInfo.Index), nil
-		},
-		"session_pin": func() (string, error) {
-			if s.secrets == nil {
-				return "", errors.New("pin is not set")
-			}
-
-			return s.secrets.Pin(), nil
-		},
-		"session_puk": func() (string, error) {
-			if s.secrets == nil {
-				return "", errors.New("puk is not set")
-			}
-
-			return s.secrets.Puk(), nil
-		},
-		"session_pairing_password": func() (string, error) {
-			if s.secrets == nil {
-				return "", errors.New("pairing password is not set")
-			}
-
-			return s.secrets.PairingPass(), nil
-		},
-	}
-
-	tpl, err := template.New("").Funcs(funcMap).Parse(text)
+	tpl, err := template.New("").Funcs(s.tplFuncMap).Parse(text)
 	if err != nil {
 		return "", err
 	}
