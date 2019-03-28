@@ -81,6 +81,30 @@ func fail(msg string, ctx ...interface{}) {
 	os.Exit(1)
 }
 
+func waitForCard(ctx *scard.Context, readers []string) (int, error) {
+	rs := make([]scard.ReaderState, len(readers))
+
+	for i := range rs {
+		rs[i].Reader = readers[i]
+		rs[i].CurrentState = scard.StateUnaware
+	}
+
+	for {
+		for i := range rs {
+			if rs[i].EventState&scard.StatePresent != 0 {
+				return i, nil
+			}
+
+			rs[i].CurrentState = rs[i].EventState
+		}
+
+		err := ctx.GetStatusChange(rs, -1)
+		if err != nil {
+			return -1, err
+		}
+	}
+}
+
 func main() {
 	ctx, err := scard.EstablishContext()
 	if err != nil {
@@ -97,15 +121,15 @@ func main() {
 		fail("error getting readers", "error", err)
 	}
 
-	if len(readers) == 0 {
-		fail("couldn't find any reader")
+	logger.Info("waiting for a card")
+	index, err := waitForCard(ctx, readers)
+	if err != nil {
+		fail("error waiting for card", "error", err)
 	}
 
-	if len(readers) > 1 {
-		fail("too many readers found")
-	}
+	logger.Info("card found", "index", index)
+	reader := readers[index]
 
-	reader := readers[0]
 	logger.Debug("using reader", "name", reader)
 	logger.Debug("connecting to card", "reader", reader)
 	card, err := ctx.Connect(reader, scard.ShareShared, scard.ProtocolAny)
