@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"regexp"
@@ -15,13 +16,14 @@ import (
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
+	keycardio "github.com/status-im/keycard-go/io"
 	"github.com/status-im/keycard-go/types"
 )
 
 type shellCommand = func(args ...string) error
 
 type Shell struct {
-	t        globalplatform.Transmitter
+	t        keycardio.Transmitter
 	c        types.Channel
 	secrets  *keycard.Secrets
 	gpCmdSet *globalplatform.CommandSet
@@ -30,8 +32,8 @@ type Shell struct {
 	out      *bytes.Buffer
 }
 
-func NewShell(t globalplatform.Transmitter) *Shell {
-	c := globalplatform.NewNormalChannel(t)
+func NewShell(t keycardio.Transmitter) *Shell {
+	c := keycardio.NewNormalChannel(t)
 
 	s := &Shell{
 		t:        t,
@@ -42,24 +44,31 @@ func NewShell(t globalplatform.Transmitter) *Shell {
 	}
 
 	s.commands = map[string]shellCommand{
-		"gp-send-apdu":                s.commandGPSendAPDU,
-		"gp-select":                   s.commandGPSelect,
-		"gp-open-secure-channel":      s.commandGPOpenSecureChannel,
-		"gp-delete":                   s.commandGPDelete,
-		"gp-load":                     s.commandGPLoad,
-		"gp-install-for-install":      s.commandGPInstallForInstall,
-		"keycard-init":                s.commandKeycardInit,
-		"keycard-select":              s.commandKeycardSelect,
-		"keycard-pair":                s.commandKeycardPair,
-		"keycard-open-secure-channel": s.commandKeycardOpenSecureChannel,
-		"keycard-get-status":          s.commandKeycardGetStatus,
-		"keycard-set-secrets":         s.commandKeycardSetSecrets,
-		"keycard-set-pairing":         s.commandKeycardSetPairing,
-		"keycard-verify-pin":          s.commandKeycardVerifyPIN,
-		"keycard-generate-key":        s.commandKeycardGenerateKey,
-		"keycard-derive-key":          s.commandKeycardDeriveKey,
-		"keycard-sign":                s.commandKeycardSign,
-		"keycard-set-pinless-path":    s.commandKeycardSetPinlessPath,
+		"echo":                          s.commandEcho,
+		"gp-send-apdu":                  s.commandGPSendAPDU,
+		"gp-select":                     s.commandGPSelect,
+		"gp-open-secure-channel":        s.commandGPOpenSecureChannel,
+		"gp-delete":                     s.commandGPDelete,
+		"gp-load":                       s.commandGPLoad,
+		"gp-install-for-install":        s.commandGPInstallForInstall,
+		"keycard-init":                  s.commandKeycardInit,
+		"keycard-select":                s.commandKeycardSelect,
+		"keycard-pair":                  s.commandKeycardPair,
+		"keycard-unpair":                s.commandKeycardUnpair,
+		"keycard-open-secure-channel":   s.commandKeycardOpenSecureChannel,
+		"keycard-get-status":            s.commandKeycardGetStatus,
+		"keycard-set-secrets":           s.commandKeycardSetSecrets,
+		"keycard-set-pairing":           s.commandKeycardSetPairing,
+		"keycard-verify-pin":            s.commandKeycardVerifyPIN,
+		"keycard-change-pin":            s.commandKeycardChangePIN,
+		"keycard-change-puk":            s.commandKeycardChangePUK,
+		"keycard-change-pairing-secret": s.commandKeycardChangePairingSecret,
+		"keycard-generate-key":          s.commandKeycardGenerateKey,
+		"keycard-remove-key":            s.commandKeycardRemoveKey,
+		"keycard-derive-key":            s.commandKeycardDeriveKey,
+		"keycard-sign":                  s.commandKeycardSign,
+		"keycard-sign-message":          s.commandKeycardSignMessage,
+		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
 	}
 
 	return s
@@ -89,6 +98,11 @@ func (s *Shell) Run() error {
 		}
 	}
 
+	return nil
+}
+
+func (s *Shell) commandEcho(args ...string) error {
+	fmt.Printf("> %s\n", strings.Join(args, " "))
 	return nil
 }
 
@@ -213,7 +227,7 @@ func (s *Shell) commandGPInstallForInstall(args ...string) error {
 		}
 	}
 
-	logger.Info("install for install", "pkg", pkgAID, "applet", appletAID, "instance", instanceAID, "params", params)
+	logger.Info("install for install", "pkg", fmt.Sprintf("%x", pkgAID), "applet", fmt.Sprintf("%x", appletAID), "instance", fmt.Sprintf("%x", instanceAID), "params", fmt.Sprintf("%x", params))
 
 	return s.gpCmdSet.InstallForInstall(pkgAID, appletAID, instanceAID, params)
 }
@@ -308,13 +322,43 @@ func (s *Shell) commandKeycardPair(args ...string) error {
 		return errors.New("cannot pair without setting secrets")
 	}
 
+	logger.Info("pair")
 	err := s.kCmdSet.Pair(s.secrets.PairingPass())
 	if err != nil {
+		logger.Error("pair failed", "error", err)
 		return err
 	}
 
 	s.write(fmt.Sprintf("PAIRING KEY: %x\n", s.kCmdSet.PairingInfo.Key))
 	s.write(fmt.Sprintf("PAIRING INDEX: %v\n", s.kCmdSet.PairingInfo.Index))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardUnpair(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	indexInt, err := strconv.ParseInt(args[0], 10, 8)
+	if err != nil {
+		return err
+	}
+
+	index := uint8(indexInt)
+
+	if s.secrets == nil {
+		return errors.New("cannot unpair without setting secrets")
+	}
+
+	logger.Info(fmt.Sprintf("unpair index %d", index))
+	err = s.kCmdSet.Unpair(index)
+	if err != nil {
+		logger.Error("unpair failed", "error", err)
+		return err
+	}
+
+	s.write("UNPAIRED\n")
 
 	return nil
 }
@@ -398,6 +442,48 @@ func (s *Shell) commandKeycardVerifyPIN(args ...string) error {
 	return nil
 }
 
+func (s *Shell) commandKeycardChangePIN(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	logger.Info("change PIN")
+	if err := s.kCmdSet.ChangePIN(args[0]); err != nil {
+		logger.Error("change PIN failed", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *Shell) commandKeycardChangePUK(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	logger.Info("change PUK")
+	if err := s.kCmdSet.ChangePUK(args[0]); err != nil {
+		logger.Error("change PUK failed", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *Shell) commandKeycardChangePairingSecret(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	logger.Info("change pairing secret")
+	if err := s.kCmdSet.ChangePairingSecret(args[0]); err != nil {
+		logger.Error("change pairing secret failed", "error", err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *Shell) commandKeycardGenerateKey(args ...string) error {
 	if err := s.requireArgs(args, 0); err != nil {
 		return err
@@ -410,6 +496,22 @@ func (s *Shell) commandKeycardGenerateKey(args ...string) error {
 	}
 
 	s.write(fmt.Sprintf("KEY UID %x\n", keyUID))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardRemoveKey(args ...string) error {
+	if err := s.requireArgs(args, 0); err != nil {
+		return err
+	}
+
+	logger.Info("remove key")
+	err := s.kCmdSet.RemoveKey()
+	if err != nil {
+		return err
+	}
+
+	s.write(fmt.Sprintf("KEY REMOVED \n"))
 
 	return nil
 }
@@ -429,6 +531,32 @@ func (s *Shell) commandKeycardDeriveKey(args ...string) error {
 }
 
 func (s *Shell) commandKeycardSign(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	data, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing hex data", "error", err)
+		return err
+	}
+
+	logger.Info("sign")
+	sig, err := s.kCmdSet.Sign(data)
+	if err != nil {
+		logger.Error("sign failed", "error", err)
+		return err
+	}
+
+	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
+	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
+	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
+	s.write(fmt.Sprintf("PUBLIC KEY: %x\n", sig.PubKey()))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardSignMessage(args ...string) error {
 	if err := s.requireArgs(args, 1); err != nil {
 		return err
 	}
@@ -490,6 +618,11 @@ func (s *Shell) evalLine(rawLine string) error {
 		return nil
 	}
 
+	line, err := s.evalTemplate(line)
+	if err != nil {
+		return err
+	}
+
 	reg := regexp.MustCompile("\\s+")
 	parts := reg.Split(line, -1)
 	if cmd, ok := s.commands[parts[0]]; ok {
@@ -505,4 +638,65 @@ func (s *Shell) parseHex(str string) ([]byte, error) {
 	}
 
 	return hex.DecodeString(str)
+}
+
+func (s *Shell) evalTemplate(text string) (string, error) {
+	funcMap := template.FuncMap{
+		"env": func(name string) (string, error) {
+			value := os.Getenv(name)
+			if value == "" {
+				return "", fmt.Errorf("env variable is empty: %s", name)
+			}
+
+			return value, nil
+		},
+		"session_pairing_key": func() (string, error) {
+			if s.kCmdSet.PairingInfo == nil {
+				return "", errors.New("pairing key not known")
+			}
+
+			return fmt.Sprintf("%x", s.kCmdSet.PairingInfo.Key), nil
+		},
+		"session_pairing_index": func() (string, error) {
+			if s.kCmdSet.PairingInfo == nil {
+				return "", errors.New("pairing index not known")
+			}
+
+			return fmt.Sprintf("%d", s.kCmdSet.PairingInfo.Index), nil
+		},
+		"session_pin": func() (string, error) {
+			if s.secrets == nil {
+				return "", errors.New("pin is not set")
+			}
+
+			return s.secrets.Pin(), nil
+		},
+		"session_puk": func() (string, error) {
+			if s.secrets == nil {
+				return "", errors.New("puk is not set")
+			}
+
+			return s.secrets.Puk(), nil
+		},
+		"session_pairing_password": func() (string, error) {
+			if s.secrets == nil {
+				return "", errors.New("pairing password is not set")
+			}
+
+			return s.secrets.PairingPass(), nil
+		},
+	}
+
+	tpl, err := template.New("").Funcs(funcMap).Parse(text)
+	if err != nil {
+		return "", err
+	}
+
+	buf := bytes.NewBufferString("")
+	err = tpl.Execute(buf, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
