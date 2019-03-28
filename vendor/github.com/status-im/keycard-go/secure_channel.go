@@ -9,6 +9,7 @@ import (
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/crypto"
 	"github.com/status-im/keycard-go/globalplatform"
+	"github.com/status-im/keycard-go/hexutils"
 	"github.com/status-im/keycard-go/types"
 )
 
@@ -106,6 +107,8 @@ func (sc *SecureChannel) Send(cmd *apdu.Command) (*apdu.Response, error) {
 	if !bytes.Equal(sc.iv, rmac) {
 		return nil, ErrInvalidResponseMAC
 	}
+
+	logger.Debug("apdu response decrypted", "hex", hexutils.BytesToHexWithSpaces(plainData))
 
 	return apdu.ParseResponse(plainData)
 }

@@ -18,10 +18,10 @@ const (
 )
 
 const (
-	CapabilitySecureChannel         Capability = iota + 1
-	CapabilityKeyManagement         Capability = 1 << iota
-	CapabilityCredentialsManagement Capability = 1 << iota
-	CapabilityNDEF                  Capability = 1 << iota
+	CapabilitySecureChannel Capability = 1 << iota
+	CapabilityKeyManagement
+	CapabilityCredentialsManagement
+	CapabilityNDEF
 
 	CapabilityAll = CapabilitySecureChannel |
 		CapabilityKeyManagement |

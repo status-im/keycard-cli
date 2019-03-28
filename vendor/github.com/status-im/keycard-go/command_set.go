@@ -12,6 +12,8 @@ import (
 	"github.com/status-im/keycard-go/types"
 )
 
+var ErrNoAvailablePairingSlots = errors.New("no available pairing slots")
+
 type CommandSet struct {
 	c               types.Channel
 	sc              *SecureChannel
@@ -93,6 +95,10 @@ func (cs *CommandSet) Pair(pairingPass string) error {
 
 	cmd := NewCommandPairFirstStep(challenge)
 	resp, err := cs.c.Send(cmd)
+	if resp.Sw == SwNoAvailablePairingSlots {
+		return ErrNoAvailablePairingSlots
+	}
+
 	if err = cs.checkOK(resp, err); err != nil {
 		return err
 	}
@@ -127,6 +133,12 @@ func (cs *CommandSet) Pair(pairingPass string) error {
 	}
 
 	return nil
+}
+
+func (cs *CommandSet) Unpair(index uint8) error {
+	cmd := NewCommandUnpair(index)
+	resp, err := cs.sc.Send(cmd)
+	return cs.checkOK(resp, err)
 }
 
 func (cs *CommandSet) OpenSecureChannel() error {
@@ -176,6 +188,28 @@ func (cs *CommandSet) VerifyPIN(pin string) error {
 	return cs.checkOK(resp, err)
 }
 
+func (cs *CommandSet) ChangePIN(pin string) error {
+	cmd := NewCommandChangePIN(pin)
+	resp, err := cs.sc.Send(cmd)
+
+	return cs.checkOK(resp, err)
+}
+
+func (cs *CommandSet) ChangePUK(puk string) error {
+	cmd := NewCommandChangePUK(puk)
+	resp, err := cs.sc.Send(cmd)
+
+	return cs.checkOK(resp, err)
+}
+
+func (cs *CommandSet) ChangePairingSecret(password string) error {
+	secret := generatePairingToken(password)
+	cmd := NewCommandChangePairingSecret(secret)
+	resp, err := cs.sc.Send(cmd)
+
+	return cs.checkOK(resp, err)
+}
+
 func (cs *CommandSet) GenerateKey() ([]byte, error) {
 	cmd := NewCommandGenerateKey()
 	resp, err := cs.sc.Send(cmd)
@@ -184,6 +218,12 @@ func (cs *CommandSet) GenerateKey() ([]byte, error) {
 	}
 
 	return resp.Data, nil
+}
+
+func (cs *CommandSet) RemoveKey() error {
+	cmd := NewCommandRemoveKey()
+	resp, err := cs.sc.Send(cmd)
+	return cs.checkOK(resp, err)
 }
 
 func (cs *CommandSet) DeriveKey(path string) error {

@@ -1,9 +1,13 @@
-package globalplatform
+package io
 
 import (
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/status-im/keycard-go/apdu"
+	"github.com/status-im/keycard-go/globalplatform"
 	"github.com/status-im/keycard-go/hexutils"
 )
+
+var logger = log.New("package", "io")
 
 // Transmitter defines an interface with one method to transmit raw commands and receive raw responses.
 type Transmitter interface {
@@ -41,8 +45,8 @@ func (c *NormalChannel) Send(cmd *apdu.Command) (*apdu.Response, error) {
 		return nil, err
 	}
 
-	if resp.Sw1 == Sw1ResponseDataIncomplete && (cmd.Cla != ClaISO7816 || cmd.Ins != InsGetResponse) {
-		getResponse := NewCommandGetResponse(resp.Sw2)
+	if resp.Sw1 == globalplatform.Sw1ResponseDataIncomplete && (cmd.Cla != globalplatform.ClaISO7816 || cmd.Ins != globalplatform.InsGetResponse) {
+		getResponse := globalplatform.NewCommandGetResponse(resp.Sw2)
 		return c.Send(getResponse)
 	}
 

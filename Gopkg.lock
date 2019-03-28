@@ -42,7 +42,7 @@
 
 [[projects]]
   branch = "develop"
-  digest = "1:9732855298c5522b25234e718d3d42d9d21b2c2ed6ffd49c18a9c102c50b290c"
+  digest = "1:354e8b1b5bb2aeab3a10a51eeed5937526c2c90a0b8147e8b050ee04fbf9b84a"
   name = "github.com/status-im/keycard-go"
   packages = [
     ".",
@@ -53,10 +53,11 @@
     "globalplatform/crypto",
     "hexutils",
     "identifiers",
+    "io",
     "types",
   ]
   pruneopts = "NUT"
-  revision = "72d8e3de8b61c902cebf29a7bec348ea9b425173"
+  revision = "3cdaf543d74e0d07a419773326bb1ddd1a5d6cd0"
 
 [[projects]]
   branch = "master"
@@ -106,6 +107,7 @@
     "github.com/status-im/keycard-go/globalplatform",
     "github.com/status-im/keycard-go/hexutils",
     "github.com/status-im/keycard-go/identifiers",
+    "github.com/status-im/keycard-go/io",
     "github.com/status-im/keycard-go/types",
   ]
   solver-name = "gps-cdcl"

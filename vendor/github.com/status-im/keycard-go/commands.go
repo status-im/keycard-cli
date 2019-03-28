@@ -11,32 +11,40 @@ import (
 )
 
 const (
-	InsInit                 = uint8(0xFE)
-	InsOpenSecureChannel    = uint8(0x10)
-	InsMutuallyAuthenticate = uint8(0x11)
-	InsPair                 = uint8(0x12)
-	InsGetStatus            = uint8(0xF2)
-	InsGenerateKey          = uint8(0xD4)
-	InsVerifyPIN            = uint8(0x20)
-	InsDeriveKey            = uint8(0xD1)
-	InsSign                 = uint8(0xC0)
-	InsSetPinlessPath       = uint8(0xC1)
+	InsInit                 = 0xFE
+	InsOpenSecureChannel    = 0x10
+	InsMutuallyAuthenticate = 0x11
+	InsPair                 = 0x12
+	InsUnpair               = 0x13
+	InsGetStatus            = 0xF2
+	InsGenerateKey          = 0xD4
+	InsRemoveKey            = 0xD3
+	InsVerifyPIN            = 0x20
+	InsChangePIN            = 0x21
+	InsDeriveKey            = 0xD1
+	InsSign                 = 0xC0
+	InsSetPinlessPath       = 0xC1
 
-	P1PairingFirstStep     = uint8(0x00)
-	P1PairingFinalStep     = uint8(0x01)
-	P1GetStatusApplication = uint8(0x00)
-	P1GetStatusKeyPath     = uint8(0x01)
-	P1DeriveKeyFromMaster  = uint8(0x00)
-	P1DeriveKeyFromParent  = uint8(0x01)
-	P1DeriveKeyFromCurrent = uint8(0x10)
+	P1PairingFirstStep       = 0x00
+	P1PairingFinalStep       = 0x01
+	P1GetStatusApplication   = 0x00
+	P1GetStatusKeyPath       = 0x01
+	P1DeriveKeyFromMaster    = 0x00
+	P1DeriveKeyFromParent    = 0x01
+	P1DeriveKeyFromCurrent   = 0x10
+	P1ChangePinPIN           = 0x00
+	P1ChangePinPUK           = 0x01
+	P1ChangePinPairingSecret = 0x02
+
+	SwNoAvailablePairingSlots = 0x6A84
 )
 
 func NewCommandInit(data []byte) *apdu.Command {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsInit,
-		uint8(0x00),
-		uint8(0x00),
+		0,
+		0,
 		data,
 	)
 }
@@ -46,7 +54,7 @@ func NewCommandPairFirstStep(challenge []byte) *apdu.Command {
 		globalplatform.ClaGp,
 		InsPair,
 		P1PairingFirstStep,
-		uint8(0x00),
+		0,
 		challenge,
 	)
 }
@@ -56,8 +64,18 @@ func NewCommandPairFinalStep(cryptogramHash []byte) *apdu.Command {
 		globalplatform.ClaGp,
 		InsPair,
 		P1PairingFinalStep,
-		uint8(0x00),
+		0,
 		cryptogramHash,
+	)
+}
+
+func NewCommandUnpair(index uint8) *apdu.Command {
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsUnpair,
+		index,
+		0,
+		[]byte{},
 	)
 }
 
@@ -66,7 +84,7 @@ func NewCommandOpenSecureChannel(pairingIndex uint8, pubKey []byte) *apdu.Comman
 		globalplatform.ClaGp,
 		InsOpenSecureChannel,
 		pairingIndex,
-		uint8(0x00),
+		0,
 		pubKey,
 	)
 }
@@ -75,8 +93,8 @@ func NewCommandMutuallyAuthenticate(data []byte) *apdu.Command {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsMutuallyAuthenticate,
-		uint8(0x00),
-		uint8(0x00),
+		0,
+		0,
 		data,
 	)
 }
@@ -86,7 +104,7 @@ func NewCommandGetStatus(p1 uint8) *apdu.Command {
 		globalplatform.ClaGp,
 		InsGetStatus,
 		p1,
-		uint8(0x00),
+		0,
 		[]byte{},
 	)
 }
@@ -95,8 +113,18 @@ func NewCommandGenerateKey() *apdu.Command {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsGenerateKey,
-		uint8(0),
-		uint8(0),
+		0,
+		0,
+		[]byte{},
+	)
+}
+
+func NewCommandRemoveKey() *apdu.Command {
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsRemoveKey,
+		0,
+		0,
 		[]byte{},
 	)
 }
@@ -105,9 +133,39 @@ func NewCommandVerifyPIN(pin string) *apdu.Command {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsVerifyPIN,
-		uint8(0),
-		uint8(0),
+		0,
+		0,
 		[]byte(pin),
+	)
+}
+
+func NewCommandChangePIN(pin string) *apdu.Command {
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsChangePIN,
+		P1ChangePinPIN,
+		0,
+		[]byte(pin),
+	)
+}
+
+func NewCommandChangePUK(puk string) *apdu.Command {
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsChangePIN,
+		P1ChangePinPUK,
+		0,
+		[]byte(puk),
+	)
+}
+
+func NewCommandChangePairingSecret(secret []byte) *apdu.Command {
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsChangePIN,
+		P1ChangePinPairingSecret,
+		0,
+		secret,
 	)
 }
 
@@ -140,7 +198,7 @@ func NewCommandDeriveKey(pathStr string) (*apdu.Command, error) {
 		globalplatform.ClaGp,
 		InsDeriveKey,
 		p1,
-		uint8(0),
+		0,
 		data.Bytes(),
 	), nil
 }
@@ -165,8 +223,8 @@ func NewCommandSetPinlessPath(pathStr string) (*apdu.Command, error) {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsSetPinlessPath,
-		uint8(0),
-		uint8(0),
+		0,
+		0,
 		data.Bytes(),
 	), nil
 }
@@ -179,8 +237,8 @@ func NewCommandSign(data []byte) (*apdu.Command, error) {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsSign,
-		uint8(0),
-		uint8(0),
+		0,
+		0,
 		data,
 	), nil
 }
