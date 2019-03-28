@@ -336,7 +336,7 @@ func (s *Shell) commandKeycardInit(args ...string) error {
 
 	s.write(fmt.Sprintf("PIN: %s\n", s.Secrets.Pin()))
 	s.write(fmt.Sprintf("PUK: %s\n", s.Secrets.Puk()))
-	s.write(fmt.Sprintf("PAIRING PASSWORD: %s\n", s.Secrets.PairingPass()))
+	s.write(fmt.Sprintf("PAIRING PASSWORD: %s\n\n", s.Secrets.PairingPass()))
 
 	return nil
 }
@@ -371,7 +371,7 @@ func (s *Shell) commandKeycardSelect(args ...string) error {
 	s.write(fmt.Sprintf("  Secure channel:%v\n", info.HasSecureChannelCapability()))
 	s.write(fmt.Sprintf("  Key management:%v\n", info.HasKeyManagementCapability()))
 	s.write(fmt.Sprintf("  Credentials Management:%v\n", info.HasCredentialsManagementCapability()))
-	s.write(fmt.Sprintf("  NDEF:%v\n", info.HasNDEFCapability()))
+	s.write(fmt.Sprintf("  NDEF:%v\n\n", info.HasNDEFCapability()))
 
 	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
 		logger.Error("select keycard failed", "error", err)
@@ -398,7 +398,7 @@ func (s *Shell) commandKeycardPair(args ...string) error {
 	}
 
 	s.write(fmt.Sprintf("PAIRING KEY: %x\n", s.kCmdSet.PairingInfo.Key))
-	s.write(fmt.Sprintf("PAIRING INDEX: %v\n", s.kCmdSet.PairingInfo.Index))
+	s.write(fmt.Sprintf("PAIRING INDEX: %v\n\n", s.kCmdSet.PairingInfo.Index))
 
 	return nil
 }
@@ -426,7 +426,7 @@ func (s *Shell) commandKeycardUnpair(args ...string) error {
 		return err
 	}
 
-	s.write("UNPAIRED\n")
+	s.write("UNPAIRED\n\n")
 
 	return nil
 }
@@ -491,7 +491,7 @@ func (s *Shell) commandKeycardGetStatus(args ...string) error {
 	s.write(fmt.Sprintf("STATUS - PIN RETRY COUNT: %d\n", appStatus.PinRetryCount))
 	s.write(fmt.Sprintf("STATUS - PUK RETRY COUNT: %d\n", appStatus.PUKRetryCount))
 	s.write(fmt.Sprintf("STATUS - KEY INITIALIZED: %v\n", appStatus.KeyInitialized))
-	s.write(fmt.Sprintf("STATUS - KEY PATH: %v\n", keyStatus.Path))
+	s.write(fmt.Sprintf("STATUS - KEY PATH: %v\n\n", keyStatus.Path))
 
 	return nil
 }
@@ -563,7 +563,7 @@ func (s *Shell) commandKeycardGenerateKey(args ...string) error {
 		return err
 	}
 
-	s.write(fmt.Sprintf("KEY UID %x\n", keyUID))
+	s.write(fmt.Sprintf("KEY UID %x\n\n", keyUID))
 
 	return nil
 }
@@ -579,7 +579,7 @@ func (s *Shell) commandKeycardRemoveKey(args ...string) error {
 		return err
 	}
 
-	s.write(fmt.Sprintf("KEY REMOVED \n"))
+	s.write(fmt.Sprintf("KEY REMOVED \n\n"))
 
 	return nil
 }
@@ -619,7 +619,7 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
 	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
 	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
-	s.write(fmt.Sprintf("PUBLIC KEY: %x\n", sig.PubKey()))
+	s.write(fmt.Sprintf("PUBLIC KEY: %x\n\n", sig.PubKey()))
 
 	return nil
 }
@@ -645,7 +645,7 @@ func (s *Shell) commandKeycardSignMessage(args ...string) error {
 	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
 	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
 	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
-	s.write(fmt.Sprintf("PUBLIC KEY: %x\n", sig.PubKey()))
+	s.write(fmt.Sprintf("PUBLIC KEY: %x\n\n", sig.PubKey()))
 
 	return nil
 }
