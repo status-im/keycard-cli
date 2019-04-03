@@ -190,7 +190,7 @@ func (s *Shell) commandGPSendAPDU(args ...string) error {
 		logger.Error("send apdu failed", "error", err)
 		return err
 	}
-	logger.Info(fmt.Sprintf("raw response: %x", resp))
+	logger.Info("raw response", "hex", fmt.Sprintf("%x", resp))
 
 	return nil
 }
