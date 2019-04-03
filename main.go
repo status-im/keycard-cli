@@ -15,6 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+const version = "0.0.2"
+
 type commandFunc func(*scard.Card) error
 
 var (
@@ -45,6 +47,7 @@ func initLogger() {
 
 func init() {
 	commands = map[string]commandFunc{
+		"version": commandVersion,
 		"install": commandInstall,
 		"info":    commandInfo,
 		"delete":  commandDelete,
@@ -202,6 +205,11 @@ func askInt(description string) int {
 	}
 
 	return int(i)
+}
+
+func commandVersion(card *scard.Card) error {
+	fmt.Printf("version %+v\n", version)
+	return nil
 }
 
 func commandInstall(card *scard.Card) error {
