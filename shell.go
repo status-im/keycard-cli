@@ -557,6 +557,19 @@ func (s *Shell) commandKeycardGenerateKey(args ...string) error {
 		return err
 	}
 
+	logger.Info("get status before generating key")
+	appStatus, err := s.kCmdSet.GetStatusApplication()
+	if err != nil {
+		logger.Error("get status failed", "error", err)
+		return err
+	}
+
+	if appStatus.KeyInitialized {
+		err = errors.New("key already generated. you must delete it before creating a new one")
+		logger.Error("generate key failed", "error", err)
+		return err
+	}
+
 	logger.Info("generate key")
 	keyUID, err := s.kCmdSet.GenerateKey()
 	if err != nil {
