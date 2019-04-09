@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
@@ -136,6 +138,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-derive-key":            s.commandKeycardDeriveKey,
 		"keycard-sign":                  s.commandKeycardSign,
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
+		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
 	}
 
@@ -629,10 +632,7 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 		return err
 	}
 
-	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
-	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
-	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
-	s.write(fmt.Sprintf("PUBLIC KEY: %x\n\n", sig.PubKey()))
+	s.writeSignatureInfo(sig)
 
 	return nil
 }
@@ -655,10 +655,28 @@ func (s *Shell) commandKeycardSignPinless(args ...string) error {
 		return err
 	}
 
-	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
-	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
-	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
-	s.write(fmt.Sprintf("PUBLIC KEY: %x\n\n", sig.PubKey()))
+	s.writeSignatureInfo(sig)
+
+	return nil
+}
+
+func (s *Shell) commandKeycardSignMessagePinless(args ...string) error {
+	if len(args) < 1 {
+		return errors.New("keycard-sign-message-pinless require at least 1 parameter")
+	}
+
+	originalMessage := strings.Join(args, " ")
+	wrappedMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(originalMessage), originalMessage)
+	hash := crypto.Keccak256([]byte(wrappedMessage))
+
+	logger.Info("sign message pinless")
+	sig, err := s.kCmdSet.SignPinless(hash)
+	if err != nil {
+		logger.Error("sign message pinless failed", "error", err)
+		return err
+	}
+
+	s.writeSignatureInfo(sig)
 
 	return nil
 }
@@ -734,4 +752,22 @@ func (s *Shell) evalTemplate(text string) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func (s *Shell) writeSignatureInfo(sig *types.Signature) {
+	ethSig := append(sig.R(), sig.S()...)
+	ethSig = append(ethSig, []byte{sig.V() + 27}...)
+	ecdsaPubKey, err := crypto.UnmarshalPubkey(sig.PubKey())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	address := crypto.PubkeyToAddress(*ecdsaPubKey)
+
+	s.write(fmt.Sprintf("SIGNATURE R: %x\n", sig.R()))
+	s.write(fmt.Sprintf("SIGNATURE S: %x\n", sig.S()))
+	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
+	s.write(fmt.Sprintf("ETH SIGNATURE: 0x%x\n", ethSig))
+	s.write(fmt.Sprintf("PUBLIC KEY: 0x%x\n", sig.PubKey()))
+	s.write(fmt.Sprintf("ADDRESS: 0x%x\n\n", address))
 }

@@ -101,6 +101,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/ebfe/scard",
+    "github.com/ethereum/go-ethereum/crypto",
     "github.com/ethereum/go-ethereum/log",
     "github.com/status-im/keycard-go",
     "github.com/status-im/keycard-go/apdu",
