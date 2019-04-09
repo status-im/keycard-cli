@@ -174,8 +174,8 @@ func (cs *CommandSet) initializeSession(resp *apdu.Response, hostChallenge []byt
 		name string
 		key  []byte
 	}{
-		{"globalplatform", identifiers.GlobalPlatformDefaultKey},
 		{"keycard", identifiers.KeycardDevelopmentKey},
+		{"globalplatform", identifiers.GlobalPlatformDefaultKey},
 	}
 
 	for _, set := range keySets {

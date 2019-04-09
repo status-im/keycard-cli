@@ -266,7 +266,7 @@ func (cs *CommandSet) SignPinless(data []byte) (*types.Signature, error) {
 		return nil, err
 	}
 
-	resp, err := cs.sc.Send(cmd)
+	resp, err := cs.c.Send(cmd)
 	if err = cs.checkOK(resp, err); err != nil {
 		return nil, err
 	}
