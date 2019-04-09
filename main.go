@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-const version = "0.0.3"
+const version = "0.0.4"
 
 type commandFunc func(*scard.Card) error
 

@@ -25,16 +25,20 @@ const (
 	InsSign                 = 0xC0
 	InsSetPinlessPath       = 0xC1
 
-	P1PairingFirstStep       = 0x00
-	P1PairingFinalStep       = 0x01
-	P1GetStatusApplication   = 0x00
-	P1GetStatusKeyPath       = 0x01
-	P1DeriveKeyFromMaster    = 0x00
-	P1DeriveKeyFromParent    = 0x01
-	P1DeriveKeyFromCurrent   = 0x10
-	P1ChangePinPIN           = 0x00
-	P1ChangePinPUK           = 0x01
-	P1ChangePinPairingSecret = 0x02
+	P1PairingFirstStep         = 0x00
+	P1PairingFinalStep         = 0x01
+	P1GetStatusApplication     = 0x00
+	P1GetStatusKeyPath         = 0x01
+	P1DeriveKeyFromMaster      = 0x00
+	P1DeriveKeyFromParent      = 0x01
+	P1DeriveKeyFromCurrent     = 0x10
+	P1ChangePinPIN             = 0x00
+	P1ChangePinPUK             = 0x01
+	P1ChangePinPairingSecret   = 0x02
+	P1SignCurrentKey           = 0x00
+	P1SignDerive               = 0x01
+	P1SignDeriveAndMakeCurrent = 0x02
+	P1SignPinless              = 0x03
 
 	SwNoAvailablePairingSlots = 0x6A84
 )
@@ -209,7 +213,7 @@ func NewCommandSetPinlessPath(pathStr string) (*apdu.Command, error) {
 		return nil, err
 	}
 
-	if startingPoint != derivationpath.StartingPointMaster {
+	if len(path) > 0 && startingPoint != derivationpath.StartingPointMaster {
 		return nil, fmt.Errorf("pinless path must be set with an absolute path")
 	}
 
@@ -229,7 +233,7 @@ func NewCommandSetPinlessPath(pathStr string) (*apdu.Command, error) {
 	), nil
 }
 
-func NewCommandSign(data []byte) (*apdu.Command, error) {
+func NewCommandSign(data []byte, p1 uint8) (*apdu.Command, error) {
 	if len(data) != 32 {
 		return nil, fmt.Errorf("data length must be 32, got %d", len(data))
 	}
@@ -237,7 +241,7 @@ func NewCommandSign(data []byte) (*apdu.Command, error) {
 	return apdu.NewCommand(
 		globalplatform.ClaGp,
 		InsSign,
-		0,
+		p1,
 		0,
 		data,
 	), nil
