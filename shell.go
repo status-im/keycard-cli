@@ -135,7 +135,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-remove-key":            s.commandKeycardRemoveKey,
 		"keycard-derive-key":            s.commandKeycardDeriveKey,
 		"keycard-sign":                  s.commandKeycardSign,
-		"keycard-sign-message":          s.commandKeycardSignMessage,
+		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
 	}
 
@@ -637,7 +637,7 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 	return nil
 }
 
-func (s *Shell) commandKeycardSignMessage(args ...string) error {
+func (s *Shell) commandKeycardSignPinless(args ...string) error {
 	if err := s.requireArgs(args, 1); err != nil {
 		return err
 	}
@@ -648,10 +648,10 @@ func (s *Shell) commandKeycardSignMessage(args ...string) error {
 		return err
 	}
 
-	logger.Info("sign")
-	sig, err := s.kCmdSet.Sign(data)
+	logger.Info("sign pinless")
+	sig, err := s.kCmdSet.SignPinless(data)
 	if err != nil {
-		logger.Error("sign failed", "error", err)
+		logger.Error("sign pinless failed", "error", err)
 		return err
 	}
 

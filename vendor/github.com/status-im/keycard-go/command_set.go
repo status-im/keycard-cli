@@ -237,7 +237,7 @@ func (cs *CommandSet) DeriveKey(path string) error {
 }
 
 func (cs *CommandSet) SetPinlessPath(path string) error {
-	cmd, err := NewCommandDeriveKey(path)
+	cmd, err := NewCommandSetPinlessPath(path)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,21 @@ func (cs *CommandSet) SetPinlessPath(path string) error {
 }
 
 func (cs *CommandSet) Sign(data []byte) (*types.Signature, error) {
-	cmd, err := NewCommandSign(data)
+	cmd, err := NewCommandSign(data, P1SignCurrentKey)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := cs.sc.Send(cmd)
+	if err = cs.checkOK(resp, err); err != nil {
+		return nil, err
+	}
+
+	return types.ParseSignature(data, resp.Data)
+}
+
+func (cs *CommandSet) SignPinless(data []byte) (*types.Signature, error) {
+	cmd, err := NewCommandSign(data, P1SignPinless)
 	if err != nil {
 		return nil, err
 	}
