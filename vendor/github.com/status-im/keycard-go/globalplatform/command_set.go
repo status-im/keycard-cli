@@ -158,15 +158,46 @@ func (cs *CommandSet) initializeUpdate(hostChallenge []byte) error {
 	}
 
 	// verify cryptogram and initialize session keys
-	keys := NewSCP02Keys(identifiers.CardTestKey, identifiers.CardTestKey)
-	session, err := NewSession(keys, resp, hostChallenge)
+	session, err := cs.initializeSession(resp, hostChallenge)
 	if err != nil {
 		return err
 	}
+
 	cs.sc = NewSecureChannel(session, cs.c)
 	cs.session = session
 
 	return nil
+}
+
+func (cs *CommandSet) initializeSession(resp *apdu.Response, hostChallenge []byte) (session *Session, err error) {
+	keySets := []struct {
+		name string
+		key  []byte
+	}{
+		{"globalplatform", identifiers.GlobalPlatformDefaultKey},
+		{"keycard", identifiers.KeycardDevelopmentKey},
+	}
+
+	for _, set := range keySets {
+		logger.Debug("initialize session", "keys", set.name)
+		keys := NewSCP02Keys(set.key, set.key)
+		session, err = NewSession(keys, resp, hostChallenge)
+
+		// good keys
+		if err == nil {
+			break
+		}
+
+		// try the next keys
+		if err == errBadCryptogram {
+			continue
+		}
+
+		// unexpected error
+		return nil, err
+	}
+
+	return session, err
 }
 
 func (cs *CommandSet) externalAuthenticate() error {
