@@ -50,4 +50,11 @@ pipeline {
       } }
     }
   }
+  post {
+    always { script {
+      dir(env.PROJECT) {
+        sh 'make clean'
+      }
+    } }
+  }
 }
