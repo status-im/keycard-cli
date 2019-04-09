@@ -20,6 +20,7 @@ export GO_PROJECT_PATH ?= github.com/$(GITHUB_USER)/$(GITHUB_REPO)
 deps:
 	go get github.com/karalabe/xgo
 	go get github.com/aktau/github-release
+	go get github.com/status-im/keycard-go
 
 build:
 	go build -i -o $(GOBIN)/$(BIN_NAME) -v .

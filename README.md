@@ -84,4 +84,28 @@ keycard-cli delete -l debug
 ```
 
 ### Keycard shell
-TODO
+
+The shell can be used to interact with the KeyCard using `keycard-go`. You can start the shell with:
+
+```
+keycard-cli shell
+```
+
+Once in the shell, you may submit one command at a time, followed by Enter.
+
+### Pairing
+
+Before pairing, you need to initialize your card. You can do this interactively in the shell or using `keycard init` specified in the above section.
+
+> Once you initialize your card, **save the PIN, PUK, and Pairing Password fields that are generated**; you will need these to pair with the card. These secrets cannot be set once the card is initialized. If you lose them, you will need to delete the app and reinstall it using the instructions in previous sections.
+
+With the secrets in hand, run the following commands in the shell:
+
+```
+> keycard-select
+> keycard-set-secrets <PIN> <PUK> <PairingPassword>
+> keycard-pair
+```
+
+If you don't get an error message, it means you have paired with the card!
+

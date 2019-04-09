@@ -311,7 +311,11 @@ func commandStatus(card *scard.Card) error {
 
 func commandShell(card *scard.Card) error {
 	fi, _ := os.Stdin.Stat()
-	if (fi.Mode() & os.ModeCharDevice) == 0 {
+	// Alex: I don't understand what the intention is here, but the condition
+	// breaks for me. I'm also guessing the error message doesn't totally
+	// capture the failing condition. 
+	// if (fi.Mode() & os.ModeCharDevice) == 0 {
+	if (fi.Mode() & os.ModeCharDevice) == os.ModeCharDevice {
 		s := NewShell(card)
 		return s.Run()
 	} else {

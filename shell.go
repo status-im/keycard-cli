@@ -112,7 +112,6 @@ func NewShell(t keycardio.Transmitter) *Shell {
 
 	tplFuncs := &TemplateFuncs{s}
 	s.tplFuncMap = tplFuncs.FuncMap()
-
 	s.commands = map[string]shellCommand{
 		"echo":                          s.commandEcho,
 		"gp-send-apdu":                  s.commandGPSendAPDU,
@@ -154,15 +153,14 @@ func (s *Shell) flushOut() {
 }
 
 func (s *Shell) Run() error {
+	fmt.Println("Welcome to the KeyCard CLI Shell. Please type your commands and hit Enter:")
 	reader := bufio.NewReader(os.Stdin)
 	defer s.flushOut()
-
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			break
 		}
-
 		err = s.evalLine(line)
 		if err != nil {
 			return err
@@ -319,7 +317,6 @@ func (s *Shell) commandKeycardInit(args ...string) error {
 	if s.kCmdSet.ApplicationInfo.Initialized {
 		return errCardAlreadyInitialized
 	}
-
 	if s.Secrets == nil {
 		secrets, err := keycard.GenerateSecrets()
 		if err != nil {
@@ -348,9 +345,7 @@ func (s *Shell) commandKeycardSetSecrets(args ...string) error {
 	if err := s.requireArgs(args, 3); err != nil {
 		return err
 	}
-
 	s.Secrets = keycard.NewSecrets(args[0], args[1], args[2])
-
 	return nil
 }
 
