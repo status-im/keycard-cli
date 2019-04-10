@@ -93,11 +93,11 @@ keycard-cli shell
 
 Once in the shell, you may submit one command at a time, followed by Enter.
 
-### Pairing
+### Talking to the Card
 
-Before pairing, you need to initialize your card. You can do this interactively in the shell or using `keycard init` specified in the above section.
+Before you can communicate with the card, you need to initialize it. You can do this interactively in the shell or using `keycard init` specified in the above section.
 
-> Once you initialize your card, **save the PIN, PUK, and Pairing Password fields that are generated**; you will need these to pair with the card. These secrets cannot be set once the card is initialized. If you lose them, you will need to delete the app and reinstall it using the instructions in previous sections.
+> Once you initialize your card, **save the PIN, PUK, and Pairing Password fields that are generated**; you will need these to establish a connection with the card.
 
 With the secrets in hand, run the following commands in the shell:
 
@@ -105,7 +105,57 @@ With the secrets in hand, run the following commands in the shell:
 > keycard-select
 > keycard-set-secrets <PIN> <PUK> <PairingPassword>
 > keycard-pair
+> keycard-open-secure-channel
+> keycard-verify-pin <PIN>
 ```
 
-If you don't get an error message, it means you have paired with the card!
+If you don't get an error message, it means you are connected to the card! This connection will persist for the duration of your shell session.
 
+> `keycard-pair` will print two values: `PAIRING KEY` and `PAIRING INDEX`. You should save these values if you wish to reuse this pairing with a new shell session. You can do this with the command: `>keycard-set-pairing <PAIRING KEY> <PAIRING INDEX>`
+
+### Wallets
+
+Once comms are established with the card, you should generate a keypair on the card if you haven't done so already:
+
+```
+> keycard-generate-key
+```
+
+This will create a keypair that does not correspond to a mnemonic, so you cannot export it as a seed phrase. The generation utilizes the card's true random number generator.
+
+> The KeyCard applet does have the ability to import a key with a menomonic, but that isn't as secure as generating on the card. It is also not implemented in this CLI or in the Golang SDK yet.
+
+#### Setting a "Current" Key
+
+The card applet works by loading a private key (based on a derivation path) into a "current" state. Once set as the current key, the subsequent signature request will be filled by that key.
+
+You can make a key current by running:
+
+```
+> keycard-derive-key <DERIVATION_PATH>
+```
+
+Where `DERIVATION_PATH` is a BIP44 path, e.g. `m/44/0'/0'/0/0`
+
+#### Exporting Keys
+
+You can export both public and private keys based on a derivation path (or without a path, using the current key).
+
+> Public keys can always be exported, but private keys have some restrictions, which you can read about [here].
+
+When exporting a key, you have three parameters to specify:
+
+* `derive` - if false, the card will just return the current key. This means you must have derived (i.e. made current) the key ahead of time
+* `makeCurrent` - if true, the card will make the derived key "current" before returning it
+* `onlyPublic` - If true, only return the f false, return the private and public key (again, there are restrictions)
+* `path` - Derivation path
+
+Example:
+
+```
+> keycard-export-key 1 0 0 m/44'/0'/0'/0/0
+
+<RESPONSE_KEY>
+```
+
+Where `RESPONSE_KEY` is an EC public key on the secp256k1 curve in uncompressed point format, i.e. `04{X-component}{Y-component}`.

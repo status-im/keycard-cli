@@ -135,6 +135,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-generate-key":          s.commandKeycardGenerateKey,
 		"keycard-remove-key":            s.commandKeycardRemoveKey,
 		"keycard-derive-key":            s.commandKeycardDeriveKey,
+		"keycard-export-key":            s.commandKeycardExportKey,
 		"keycard-sign":                  s.commandKeycardSign,
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
@@ -395,8 +396,8 @@ func (s *Shell) commandKeycardPair(args ...string) error {
 		return err
 	}
 
-	s.write(fmt.Sprintf("PAIRING KEY: %x\n", s.kCmdSet.PairingInfo.Key))
-	s.write(fmt.Sprintf("PAIRING INDEX: %v\n\n", s.kCmdSet.PairingInfo.Index))
+	logger.Info(fmt.Sprintf("PAIRING KEY: %x\n", s.kCmdSet.PairingInfo.Key))
+	logger.Info(fmt.Sprintf("PAIRING INDEX: %v\n\n", s.kCmdSet.PairingInfo.Index))
 
 	return nil
 }
@@ -554,26 +555,22 @@ func (s *Shell) commandKeycardGenerateKey(args ...string) error {
 	if err := s.requireArgs(args, 0); err != nil {
 		return err
 	}
-
 	logger.Info("get status before generating key")
 	appStatus, err := s.kCmdSet.GetStatusApplication()
 	if err != nil {
 		logger.Error("get status failed", "error", err)
 		return err
 	}
-
 	if appStatus.KeyInitialized {
 		err = errors.New("key already generated. you must delete it before creating a new one")
 		logger.Error("generate key failed", "error", err)
 		return err
 	}
-
 	logger.Info("generate key")
 	keyUID, err := s.kCmdSet.GenerateKey()
 	if err != nil {
 		return err
 	}
-
 	s.write(fmt.Sprintf("KEY UID %x\n\n", keyUID))
 
 	return nil
@@ -602,6 +599,35 @@ func (s *Shell) commandKeycardDeriveKey(args ...string) error {
 
 	logger.Info(fmt.Sprintf("derive key %s", args[0]))
 	if err := s.kCmdSet.DeriveKey(args[0]); err != nil {
+		logger.Error("derive key failed", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *Shell) commandKeycardExportKey(args ...string) error {
+	if err := s.requireArgs(args, 4); err != nil {
+		return err
+	}
+
+	derive, err := strconv.ParseBool(args[0])
+	if err != nil {
+		return err
+	}
+
+	makeCurrent, err := strconv.ParseBool(args[1])
+	if err != nil {
+		return err
+	}
+
+	onlyPublic, err := strconv.ParseBool(args[2])
+	if err != nil {
+		return err
+	}
+	
+	logger.Info(fmt.Sprintf("derive key %s", args[0]))
+	if err := s.kCmdSet.ExportKey(derive, makeCurrent, onlyPublic, args[3]); err != nil {
 		logger.Error("derive key failed", "error", err)
 		return err
 	}
