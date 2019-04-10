@@ -159,3 +159,11 @@ Example:
 ```
 
 Where `RESPONSE_KEY` is an EC public key on the secp256k1 curve in uncompressed point format, i.e. `04{X-component}{Y-component}`.
+
+#### Signing
+
+TODO
+
+#### Other Functionality
+
+TODO
