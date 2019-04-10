@@ -627,9 +627,23 @@ func (s *Shell) commandKeycardExportKey(args ...string) error {
 	}
 	
 	logger.Info(fmt.Sprintf("derive key %s", args[0]))
-	if err := s.kCmdSet.ExportKey(derive, makeCurrent, onlyPublic, args[3]); err != nil {
-		logger.Error("derive key failed", "error", err)
+	data, err := s.kCmdSet.ExportKey(derive, makeCurrent, onlyPublic, args[3])
+	// Data format:
+	// [ 0xA1, 0x?, 0x80/81, 0x?, <payload> ]
+	// Alex: I'm not sure what bytes 1 and 3 are. They are 0x43 and 0x41, respectively,
+	// 		but I can't find these defined in the docs. They appear to just be placehodlers.
+	//		Maybe the keycard applet authors can clarify?
+	if err != nil {
 		return err
+	} else if (data[0] != 0xA1) || (data[2] != 0x80 && data[2] != 0x81) {
+		return errors.New("Incorrect response format")
+	}
+	if data[2] == 0x80 {
+		// Public Key
+		logger.Info(fmt.Sprintf("Exported Public Key: \n%x\n", data[4:]))
+	} else {
+		// Key Pair
+		logger.Info(fmt.Sprintf("Exported Key Pair: \n%x\n", data[4:]))
 	}
 
 	return nil
