@@ -1,7 +1,7 @@
 .PHONY: test build
 
 # This can be changed by exporting an env variable
-XGO_TARGETS ?= linux/amd64,windows/amd64,darwin/amd64 
+XGO_TARGETS ?= linux/amd64,windows/amd64,darwin/amd64
 
 GOBIN = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))build/bin
 PROJECT_NAME=keycard-cli
@@ -22,7 +22,7 @@ deps:
 	go get github.com/aktau/github-release
 
 build:
-	go build -i -o $(GOBIN)/$(BIN_NAME) -v .
+	go build -i -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
 	@echo "Compilation done."
 	@echo "Run \"./build/bin/$(BIN_NAME) -h\" to view available commands."
 
