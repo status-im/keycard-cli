@@ -51,10 +51,10 @@ pipeline {
     }
   }
   post {
-    always { script {
+    always {
       dir(env.PROJECT) {
         sh 'make clean'
       }
-    } }
+    }
   }
 }

@@ -33,6 +33,11 @@ pipeline {
           args '--entrypoint=""' /* allows jenkins use cat */
         }
       }
+      environment {
+        GOCACHE = "off"
+        GOPATH  = "${env.WORKSPACE}"
+        PATH    = "${env.PATH}:${env.GOPATH}/bin"
+      }
       options {
         checkoutToSubdirectory('src/github.com/status-im/keycard-cli')
       }
@@ -66,10 +71,8 @@ pipeline {
     }
   }
   post {
-    always { script {
-      dir(env.PROJECT) {
-        sh 'make clean'
-      }
-    } }
+    always { 
+      cleanWs() /* we can't use `make clean` because xgo creates root files */
+    }
   }
 }
