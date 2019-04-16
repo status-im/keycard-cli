@@ -137,6 +137,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-remove-key":            s.commandKeycardRemoveKey,
 		"keycard-derive-key":            s.commandKeycardDeriveKey,
 		"keycard-sign":                  s.commandKeycardSign,
+		"keycard-sign-message":          s.commandKeycardSignMessage,
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
@@ -629,6 +630,27 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 	sig, err := s.kCmdSet.Sign(data)
 	if err != nil {
 		logger.Error("sign failed", "error", err)
+		return err
+	}
+
+	s.writeSignatureInfo(sig)
+
+	return nil
+}
+
+func (s *Shell) commandKeycardSignMessage(args ...string) error {
+	if len(args) < 1 {
+		return errors.New("keycard-sign-message require at least 1 parameter")
+	}
+
+	originalMessage := strings.Join(args, " ")
+	wrappedMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(originalMessage), originalMessage)
+	hash := crypto.Keccak256([]byte(wrappedMessage))
+
+	logger.Info("sign message")
+	sig, err := s.kCmdSet.Sign(hash)
+	if err != nil {
+		logger.Error("sign message failed", "error", err)
 		return err
 	}
 
