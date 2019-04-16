@@ -30,8 +30,8 @@ const (
 	P1GetStatusApplication     = 0x00
 	P1GetStatusKeyPath         = 0x01
 	P1DeriveKeyFromMaster      = 0x00
-	P1DeriveKeyFromParent      = 0x01
-	P1DeriveKeyFromCurrent     = 0x10
+	P1DeriveKeyFromParent      = 0x40
+	P1DeriveKeyFromCurrent     = 0x80
 	P1ChangePinPIN             = 0x00
 	P1ChangePinPUK             = 0x01
 	P1ChangePinPairingSecret   = 0x02
