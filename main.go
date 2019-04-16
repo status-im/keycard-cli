@@ -125,6 +125,10 @@ func main() {
 	}
 
 	logger.Info("waiting for a card")
+	if len(readers) == 0 {
+		fail("no smartcard reader found")
+	}
+
 	index, err := waitForCard(ctx, readers)
 	if err != nil {
 		fail("error waiting for card", "error", err)
