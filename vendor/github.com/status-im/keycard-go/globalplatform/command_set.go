@@ -143,10 +143,14 @@ func (cs *CommandSet) InstallForInstall(packageAID, appletAID, instanceAID, para
 	return cs.checkOK(resp, err)
 }
 
-func (cs *CommandSet) GetStatus() error {
+func (cs *CommandSet) GetStatus() (*types.CardStatus, error) {
 	cmd := NewCommandGetStatus([]byte{}, P1GetStatusIssuerSecurityDomain)
 	resp, err := cs.sc.Send(cmd)
-	return cs.checkOK(resp, err)
+	if err = cs.checkOK(resp, err); err != nil {
+		return nil, err
+	}
+
+	return types.ParseCardStatus(resp.Data)
 }
 
 func (cs *CommandSet) Channel() types.Channel {

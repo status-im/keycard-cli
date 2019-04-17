@@ -84,33 +84,33 @@ func ParseApplicationInfo(data []byte) (*ApplicationInfo, error) {
 		return nil, ErrWrongApplicationInfoTemplate
 	}
 
-	instanceUID, err := apdu.FindTag(data, TagApplicationInfoTemplate, uint8(0x8F))
+	instanceUID, err := apdu.FindTag(data, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x8F})
 	if err != nil {
 		return nil, err
 	}
 
-	pubKey, err := apdu.FindTag(data, TagApplicationInfoTemplate, uint8(0x80))
+	pubKey, err := apdu.FindTag(data, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x80})
 	if err != nil {
 		return nil, err
 	}
 
-	appVersion, err := apdu.FindTag(data, TagApplicationInfoTemplate, uint8(0x02))
+	appVersion, err := apdu.FindTag(data, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x02})
 	if err != nil {
 		return nil, err
 	}
 
-	availableSlots, err := apdu.FindTagN(data, 1, TagApplicationInfoTemplate, uint8(0x02))
+	availableSlots, err := apdu.FindTagN(data, 1, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x02})
 	if err != nil {
 		return nil, err
 	}
 
-	keyUID, err := apdu.FindTagN(data, 0, TagApplicationInfoTemplate, uint8(0x8E))
+	keyUID, err := apdu.FindTagN(data, 0, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x8E})
 	if err != nil {
 		return nil, err
 	}
 
 	capabilities := CapabilityAll
-	capabilitiesBytes, err := apdu.FindTag(data, TagApplicationInfoCapabilities)
+	capabilitiesBytes, err := apdu.FindTag(data, apdu.Tag{TagApplicationInfoCapabilities})
 	if err == nil && len(capabilitiesBytes) > 0 {
 		capabilities = Capability(capabilitiesBytes[0])
 	}

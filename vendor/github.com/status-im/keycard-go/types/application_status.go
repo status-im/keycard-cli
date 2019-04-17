@@ -20,22 +20,22 @@ type ApplicationStatus struct {
 }
 
 func ParseApplicationStatus(data []byte) (*ApplicationStatus, error) {
-	tpl, err := apdu.FindTag(data, TagApplicationStatusTemplate)
+	tpl, err := apdu.FindTag(data, apdu.Tag{TagApplicationStatusTemplate})
 	if err != nil {
 		return parseKeyPathStatus(data)
 	}
 
 	appStatus := &ApplicationStatus{}
 
-	if pinRetryCount, err := apdu.FindTag(tpl, uint8(0x02)); err == nil && len(pinRetryCount) == 1 {
+	if pinRetryCount, err := apdu.FindTag(tpl, apdu.Tag{0x02}); err == nil && len(pinRetryCount) == 1 {
 		appStatus.PinRetryCount = int(pinRetryCount[0])
 	}
 
-	if pukRetryCount, err := apdu.FindTagN(tpl, 1, uint8(0x02)); err == nil && len(pukRetryCount) == 1 {
+	if pukRetryCount, err := apdu.FindTagN(tpl, 1, apdu.Tag{0x02}); err == nil && len(pukRetryCount) == 1 {
 		appStatus.PUKRetryCount = int(pukRetryCount[0])
 	}
 
-	if keyInitialized, err := apdu.FindTag(tpl, uint8(0x01)); err == nil {
+	if keyInitialized, err := apdu.FindTag(tpl, apdu.Tag{0x01}); err == nil {
 		if bytes.Equal(keyInitialized, []byte{0xFF}) {
 			appStatus.KeyInitialized = true
 		}

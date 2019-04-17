@@ -8,6 +8,8 @@ import (
 	"io"
 )
 
+type Tag []byte
+
 var (
 	ErrUnsupportedLenth80 = errors.New("length cannot be 0x80")
 	ErrLengthTooBig       = errors.New("length cannot be more than 3 bytes")
@@ -15,7 +17,7 @@ var (
 
 // ErrTagNotFound is an error returned if a tag is not found in a TLV sequence.
 type ErrTagNotFound struct {
-	tag uint8
+	tag Tag
 }
 
 // Error implements the error interface
@@ -24,16 +26,16 @@ func (e *ErrTagNotFound) Error() string {
 }
 
 // FindTag searches for a tag value within a TLV sequence.
-func FindTag(raw []byte, tags ...uint8) ([]byte, error) {
+func FindTag(raw []byte, tags ...Tag) ([]byte, error) {
 	return findTag(raw, 0, tags...)
 }
 
 // FindTagN searches for a tag value within a TLV sequence and returns the n occurrence
-func FindTagN(raw []byte, n int, tags ...uint8) ([]byte, error) {
+func FindTagN(raw []byte, n int, tags ...Tag) ([]byte, error) {
 	return findTag(raw, n, tags...)
 }
 
-func findTag(raw []byte, occurrence int, tags ...uint8) ([]byte, error) {
+func findTag(raw []byte, occurrence int, tags ...Tag) ([]byte, error) {
 	if len(tags) == 0 {
 		return raw, nil
 	}
@@ -42,13 +44,13 @@ func findTag(raw []byte, occurrence int, tags ...uint8) ([]byte, error) {
 	buf := bytes.NewBuffer(raw)
 
 	var (
-		tag    uint8
+		tag    Tag
 		length uint32
 		err    error
 	)
 
 	for {
-		tag, err = buf.ReadByte()
+		tag, buf, err = parseTag(buf)
 		switch {
 		case err == io.EOF:
 			return []byte{}, &ErrTagNotFound{target}
@@ -69,7 +71,7 @@ func findTag(raw []byte, occurrence int, tags ...uint8) ([]byte, error) {
 			}
 		}
 
-		if tag == target {
+		if bytes.Equal(tag, target) {
 			// if it's the last tag in the search path, we start counting the occurrences
 			if len(tags) == 1 && occurrence > 0 {
 				occurrence--
@@ -114,4 +116,30 @@ func parseLength(buf *bytes.Buffer) (uint32, *bytes.Buffer, error) {
 	}
 
 	return uint32(length), buf, nil
+}
+
+func parseTag(buf *bytes.Buffer) (Tag, *bytes.Buffer, error) {
+	tag := make(Tag, 0)
+	b, err := buf.ReadByte()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tag = append(tag, b)
+	if b&0x1F != 0x1F {
+		return tag, buf, nil
+	}
+
+	for {
+		b, err = buf.ReadByte()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		tag = append(tag, b)
+
+		if b&0x80 != 0x80 {
+			return tag, buf, nil
+		}
+	}
 }

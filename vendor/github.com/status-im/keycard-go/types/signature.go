@@ -19,12 +19,12 @@ type Signature struct {
 }
 
 func ParseSignature(message, resp []byte) (*Signature, error) {
-	pubKey, err := apdu.FindTag(resp, TagSignatureTemplate, uint8(0x80))
+	pubKey, err := apdu.FindTag(resp, apdu.Tag{TagSignatureTemplate}, apdu.Tag{0x80})
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := apdu.FindTagN(resp, 0, TagSignatureTemplate, uint8(0x30), uint8(0x02))
+	r, err := apdu.FindTagN(resp, 0, apdu.Tag{TagSignatureTemplate}, apdu.Tag{0x30}, apdu.Tag{0x02})
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func ParseSignature(message, resp []byte) (*Signature, error) {
 		r = r[len(r)-32:]
 	}
 
-	s, err := apdu.FindTagN(resp, 1, TagSignatureTemplate, uint8(0x30), uint8(0x02))
+	s, err := apdu.FindTagN(resp, 1, apdu.Tag{TagSignatureTemplate}, apdu.Tag{0x30}, apdu.Tag{0x02})
 	if err != nil {
 		return nil, err
 	}

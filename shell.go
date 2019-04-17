@@ -324,8 +324,15 @@ func (s *Shell) commandGPGetStatus(args ...string) error {
 	}
 
 	logger.Info("get status")
+	cardStatus, err := s.gpCmdSet.GetStatus()
+	if err != nil {
+		logger.Error("get status failed", "error", err)
+		return err
+	}
 
-	return s.gpCmdSet.GetStatus()
+	s.write(fmt.Sprintf("CARD STATUS: %s\n\n", cardStatus.LifeCycle()))
+
+	return nil
 }
 
 func (s *Shell) commandKeycardInit(args ...string) error {
