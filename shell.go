@@ -121,6 +121,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"gp-delete":                     s.commandGPDelete,
 		"gp-load":                       s.commandGPLoad,
 		"gp-install-for-install":        s.commandGPInstallForInstall,
+		"gp-get-status":                 s.commandGPGetStatus,
 		"keycard-init":                  s.commandKeycardInit,
 		"keycard-select":                s.commandKeycardSelect,
 		"keycard-pair":                  s.commandKeycardPair,
@@ -315,6 +316,16 @@ func (s *Shell) commandGPInstallForInstall(args ...string) error {
 	logger.Info("install for install", "pkg", fmt.Sprintf("%x", pkgAID), "applet", fmt.Sprintf("%x", appletAID), "instance", fmt.Sprintf("%x", instanceAID), "params", fmt.Sprintf("%x", params))
 
 	return s.gpCmdSet.InstallForInstall(pkgAID, appletAID, instanceAID, params)
+}
+
+func (s *Shell) commandGPGetStatus(args ...string) error {
+	if err := s.requireArgs(args, 0); err != nil {
+		return err
+	}
+
+	logger.Info("get status")
+
+	return s.gpCmdSet.GetStatus()
 }
 
 func (s *Shell) commandKeycardInit(args ...string) error {

@@ -31,14 +31,7 @@ func (cs *CommandSet) Select() error {
 }
 
 func (cs *CommandSet) SelectAID(aid []byte) error {
-	cmd := apdu.NewCommand(
-		0x00,
-		InsSelect,
-		uint8(0x04),
-		uint8(0x00),
-		aid,
-	)
-
+	cmd := NewCommandSelect(aid)
 	cmd.SetLe(0)
 	resp, err := cs.c.Send(cmd)
 
@@ -148,6 +141,20 @@ func (cs *CommandSet) InstallForInstall(packageAID, appletAID, instanceAID, para
 	cmd := NewCommandInstallForInstall(packageAID, appletAID, instanceAID, params)
 	resp, err := cs.sc.Send(cmd)
 	return cs.checkOK(resp, err)
+}
+
+func (cs *CommandSet) GetStatus() error {
+	cmd := NewCommandGetStatus([]byte{}, P1GetStatusIssuerSecurityDomain)
+	resp, err := cs.sc.Send(cmd)
+	return cs.checkOK(resp, err)
+}
+
+func (cs *CommandSet) Channel() types.Channel {
+	return cs.c
+}
+
+func (cs *CommandSet) SecureChannel() *SecureChannel {
+	return cs.sc
 }
 
 func (cs *CommandSet) initializeUpdate(hostChallenge []byte) error {

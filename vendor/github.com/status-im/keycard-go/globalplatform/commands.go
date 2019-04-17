@@ -56,10 +56,6 @@ func NewCommandSelect(aid []byte) *apdu.Command {
 		aid,
 	)
 
-	// with T=0 we can both set or not the Le value
-	// with T=1 it works only without Le
-	// c.SetLe(0x00)
-
 	return c
 }
 

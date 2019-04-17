@@ -41,14 +41,7 @@ func (cs *CommandSet) Select() error {
 		return err
 	}
 
-	cmd := apdu.NewCommand(
-		0x00,
-		globalplatform.InsSelect,
-		uint8(0x04),
-		uint8(0x00),
-		instanceAID,
-	)
-
+	cmd := globalplatform.NewCommandSelect(instanceAID)
 	cmd.SetLe(0)
 	resp, err := cs.c.Send(cmd)
 	if err = cs.checkOK(resp, err); err != nil {
