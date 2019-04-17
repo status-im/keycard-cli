@@ -109,6 +109,11 @@ func waitForCard(ctx *scard.Context, readers []string) (int, error) {
 }
 
 func main() {
+	if command == "version" {
+		commandVersion(nil)
+		return
+	}
+
 	ctx, err := scard.EstablishContext()
 	if err != nil {
 		fail("error establishing card context", "error", err)
