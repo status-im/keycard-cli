@@ -183,18 +183,31 @@ func (s *Shell) commandGPSendAPDU(args ...string) error {
 		return err
 	}
 
-	apdu, err := hex.DecodeString(args[0])
+	rawCmd, err := hex.DecodeString(args[0])
 	if err != nil {
 		return err
 	}
 
-	logger.Info(fmt.Sprintf("send apdu %x", apdu))
-	resp, err := s.t.Transmit(apdu)
+	cmd, err := apdu.ParseCommand(rawCmd)
+	if err != nil {
+		logger.Error("error parsing command", "error", err)
+		return err
+	}
+
+	var channel types.Channel
+
+	if sc := s.gpCmdSet.SecureChannel(); sc != nil {
+		channel = sc
+	} else {
+		channel = s.gpCmdSet.Channel()
+	}
+
+	logger.Info(fmt.Sprintf("send apdu %x", rawCmd))
+	_, err = channel.Send(cmd)
 	if err != nil {
 		logger.Error("send apdu failed", "error", err)
 		return err
 	}
-	logger.Info("raw response", "hex", fmt.Sprintf("%x", resp))
 
 	return nil
 }
