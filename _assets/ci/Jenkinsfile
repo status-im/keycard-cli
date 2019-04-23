@@ -13,14 +13,14 @@ pipeline {
   }
 
   environment {
-    PROJECT = 'src/github.com/status-im/keycard-cli'
+    PROJECT = "${env.WORKSPACE}/src/github.com/status-im/keycard-cli"
     GOPATH  = "${env.WORKSPACE}"
     PATH    = "${env.PATH}:${env.GOPATH}/bin"
   }
 
   stages {
     stage('Prep') {
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         sh 'make deps'
       } }
     }
@@ -41,25 +41,25 @@ pipeline {
       options {
         checkoutToSubdirectory('src/github.com/status-im/keycard-cli')
       }
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         sh 'make test'
       } }
     }
 
     stage('Build') {
-      steps { script { dir(env.PROJECT) {
+      steps { script { dir(PROJECT) {
         sh 'make build-platforms'
       } } }
     }
 
     stage('Archive') {
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         archiveArtifacts('build/bin/*')
       } }
     }
 
     stage('Release') {
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         withCredentials([usernamePassword(
           credentialsId:  'status-im-auto',
           usernameVariable: 'GITHUB_USER_NAME',
@@ -72,7 +72,14 @@ pipeline {
   }
   post {
     always { 
-      cleanWs() /* we can't use `make clean` because xgo creates root files */
+      script {
+        /* in docker because binaries are owned by root */
+        docker.image('statusteam/keycard-cli-ci:latest').inside("--entrypoint='' -u 0:0") {
+          dir (PROJECT) {
+            sh 'make clean'
+          }
+        }
+      }
     }
   }
 }
