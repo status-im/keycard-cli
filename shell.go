@@ -675,8 +675,7 @@ func (s *Shell) commandKeycardSignMessage(args ...string) error {
 	}
 
 	originalMessage := strings.Join(args, " ")
-	wrappedMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(originalMessage), originalMessage)
-	hash := crypto.Keccak256([]byte(wrappedMessage))
+	hash := hashEthereumMessage(originalMessage)
 
 	logger.Info("sign message")
 	sig, err := s.kCmdSet.Sign(hash)
@@ -719,8 +718,7 @@ func (s *Shell) commandKeycardSignMessagePinless(args ...string) error {
 	}
 
 	originalMessage := strings.Join(args, " ")
-	wrappedMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(originalMessage), originalMessage)
-	hash := crypto.Keccak256([]byte(wrappedMessage))
+	hash := hashEthereumMessage(originalMessage)
 
 	logger.Info("sign message pinless")
 	sig, err := s.kCmdSet.SignPinless(hash)
@@ -823,4 +821,16 @@ func (s *Shell) writeSignatureInfo(sig *types.Signature) {
 	s.write(fmt.Sprintf("ETH SIGNATURE: 0x%x\n", ethSig))
 	s.write(fmt.Sprintf("PUBLIC KEY: 0x%x\n", sig.PubKey()))
 	s.write(fmt.Sprintf("ADDRESS: 0x%x\n\n", address))
+}
+
+func hashEthereumMessage(message string) []byte {
+	data := []byte(message)
+	if strings.HasPrefix(message, "0x") {
+		if value, err := hex.DecodeString(message[2:]); err == nil {
+			data = value
+		}
+	}
+
+	wrappedMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
+	return crypto.Keccak256([]byte(wrappedMessage))
 }
