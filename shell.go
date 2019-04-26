@@ -212,7 +212,7 @@ func (s *Shell) commandGPSendAPDU(args ...string) error {
 
 	if resp.Sw != apdu.SwOK {
 		logger.Error("unexpected response", "sw", fmt.Sprintf("%x", resp.Sw))
-		return err
+		return apdu.NewErrBadResponse(resp.Sw, "unexpected response")
 	}
 
 	return nil
