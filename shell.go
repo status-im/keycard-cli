@@ -204,9 +204,14 @@ func (s *Shell) commandGPSendAPDU(args ...string) error {
 	}
 
 	logger.Info(fmt.Sprintf("send apdu %x", rawCmd))
-	_, err = channel.Send(cmd)
+	resp, err := channel.Send(cmd)
 	if err != nil {
 		logger.Error("send apdu failed", "error", err)
+		return err
+	}
+
+	if resp.Sw != apdu.SwOK {
+		logger.Error("unexpected response", "sw", fmt.Sprintf("%x", resp.Sw))
 		return err
 	}
 
