@@ -400,8 +400,14 @@ func (s *Shell) commandKeycardSelect(args ...string) error {
 	err := s.kCmdSet.Select()
 	info := s.kCmdSet.ApplicationInfo
 
+	var keyInitialized bool
+	if len(info.KeyUID) > 0 {
+		keyInitialized = true
+	}
+
 	s.write(fmt.Sprintf("Installed: %+v\n", info.Installed))
 	s.write(fmt.Sprintf("Initialized: %+v\n", info.Initialized))
+	s.write(fmt.Sprintf("Key Initialized: %+v\n", keyInitialized))
 	s.write(fmt.Sprintf("InstanceUID: %x\n", info.InstanceUID))
 	s.write(fmt.Sprintf("SecureChannelPublicKey: %x\n", info.SecureChannelPublicKey))
 	s.write(fmt.Sprintf("Version: %x\n", info.Version))

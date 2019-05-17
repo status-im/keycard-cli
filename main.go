@@ -245,8 +245,14 @@ func commandInfo(card *scard.Card) error {
 		return err
 	}
 
+	var keyInitialized bool
+	if len(info.KeyUID) > 0 {
+		keyInitialized = true
+	}
+
 	fmt.Printf("Installed: %+v\n", info.Installed)
 	fmt.Printf("Initialized: %+v\n", info.Initialized)
+	fmt.Printf("Key Initialized: %+v\n", keyInitialized)
 	fmt.Printf("InstanceUID: 0x%x\n", info.InstanceUID)
 	fmt.Printf("SecureChannelPublicKey: 0x%x\n", info.SecureChannelPublicKey)
 	fmt.Printf("Version: 0x%x\n", info.Version)
