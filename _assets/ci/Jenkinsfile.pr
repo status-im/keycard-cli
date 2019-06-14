@@ -3,7 +3,7 @@ pipeline {
     docker { 
       label 'linux'
       image 'statusteam/keycard-cli-ci:latest'
-      args '--entrypoint=""' /* allows jenkins use cat */
+      args '-u 0:0 --entrypoint=""' /* allows jenkins use cat */
     }
   }
 
