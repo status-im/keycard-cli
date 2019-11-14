@@ -138,6 +138,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-remove-key":            s.commandKeycardRemoveKey,
 		"keycard-derive-key":            s.commandKeycardDeriveKey,
 		"keycard-sign":                  s.commandKeycardSign,
+		"keycard-sign-with-path":        s.commandKeycardSignWithPath,
 		"keycard-sign-message":          s.commandKeycardSignMessage,
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
@@ -672,6 +673,29 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 	sig, err := s.kCmdSet.Sign(data)
 	if err != nil {
 		logger.Error("sign failed", "error", err)
+		return err
+	}
+
+	s.writeSignatureInfo(sig)
+
+	return nil
+}
+
+func (s *Shell) commandKeycardSignWithPath(args ...string) error {
+	if err := s.requireArgs(args, 2); err != nil {
+		return err
+	}
+
+	data, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing hex data", "error", err)
+		return err
+	}
+
+	logger.Info("sign with path")
+	sig, err := s.kCmdSet.SignWithPath(data, args[1])
+	if err != nil {
+		logger.Error("sign with path failed", "error", err)
 		return err
 	}
 
