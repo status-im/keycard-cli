@@ -34,6 +34,7 @@ docker-image:
 
 build-platforms:
 	xgo \
+		-ldflags "-X main.version=$(VERSION)" \
 		-out $(BIN_NAME) \
 		-dest $(GOBIN) \
 		-image $(IMAGE_NAME) \
