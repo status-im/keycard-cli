@@ -94,6 +94,7 @@ type Shell struct {
 	Secrets    *keycard.Secrets
 	gpCmdSet   *globalplatform.CommandSet
 	kCmdSet    *keycard.CommandSet
+	cashCmdSet *keycard.CashCommandSet
 	commands   map[string]shellCommand
 	out        *bytes.Buffer
 	tplFuncMap template.FuncMap
@@ -103,11 +104,12 @@ func NewShell(t keycardio.Transmitter) *Shell {
 	c := keycardio.NewNormalChannel(t)
 
 	s := &Shell{
-		t:        t,
-		c:        c,
-		kCmdSet:  keycard.NewCommandSet(c),
-		gpCmdSet: globalplatform.NewCommandSet(c),
-		out:      new(bytes.Buffer),
+		t:          t,
+		c:          c,
+		kCmdSet:    keycard.NewCommandSet(c),
+		cashCmdSet: keycard.NewCashCommandSet(c),
+		gpCmdSet:   globalplatform.NewCommandSet(c),
+		out:        new(bytes.Buffer),
 	}
 
 	tplFuncs := &TemplateFuncs{s}
@@ -143,6 +145,8 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
+		"cash-select":                   s.commandCashSelect,
+		"cash-sign":                     s.commandCashSign,
 	}
 
 	return s
@@ -259,7 +263,7 @@ func (s *Shell) commandGPDelete(args ...string) error {
 
 	logger.Info(fmt.Sprintf("delete %x", aid))
 
-	return s.gpCmdSet.Delete(aid)
+	return s.gpCmdSet.DeleteObject(aid)
 }
 
 func (s *Shell) commandGPLoad(args ...string) error {
@@ -777,6 +781,51 @@ func (s *Shell) commandKeycardSetPinlessPath(args ...string) error {
 		logger.Error("set pinless path failed", "error", err)
 		return err
 	}
+
+	return nil
+}
+
+func (s *Shell) commandCashSelect(args ...string) error {
+	if err := s.requireArgs(args, 0); err != nil {
+		return err
+	}
+
+	logger.Info("select cash")
+	err := s.cashCmdSet.Select()
+	info := s.cashCmdSet.CashApplicationInfo
+
+	s.write(fmt.Sprintf("Installed: %v\n", info.Installed))
+	s.write(fmt.Sprintf("PublicKey: %x\n", info.PublicKey))
+	s.write(fmt.Sprintf("PublicKeyData: %x\n", info.PublicKeyData))
+	s.write(fmt.Sprintf("Version: %x\n\n", info.Version))
+
+	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
+		logger.Error("select cash failed", "error", err)
+		return ErrCashNotInstalled
+	}
+
+	return err
+}
+
+func (s *Shell) commandCashSign(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	data, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing hex data", "error", err)
+		return err
+	}
+
+	logger.Info("sign")
+	sig, err := s.cashCmdSet.Sign(data)
+	if err != nil {
+		logger.Error("sign failed", "error", err)
+		return err
+	}
+
+	s.writeSignatureInfo(sig)
 
 	return nil
 }

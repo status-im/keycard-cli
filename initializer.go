@@ -15,8 +15,9 @@ var (
 	errCardNotInitialized     = errors.New("card not initialized")
 	errCardAlreadyInitialized = errors.New("card already initialized")
 
-	ErrNotInitialized = errors.New("card not initialized")
-	ErrNotInstalled   = errors.New("applet not initialized")
+	ErrNotInitialized   = errors.New("card not initialized")
+	ErrNotInstalled     = errors.New("applet not initialized")
+	ErrCashNotInstalled = errors.New("cash applet not initialized")
 )
 
 // Initializer defines a struct with methods to install applets and initialize a card.

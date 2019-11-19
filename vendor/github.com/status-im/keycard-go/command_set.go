@@ -23,8 +23,9 @@ type CommandSet struct {
 
 func NewCommandSet(c types.Channel) *CommandSet {
 	return &CommandSet{
-		c:  c,
-		sc: NewSecureChannel(c),
+		c:               c,
+		sc:              NewSecureChannel(c),
+		ApplicationInfo: &types.ApplicationInfo{},
 	}
 }
 
@@ -45,7 +46,6 @@ func (cs *CommandSet) Select() error {
 	cmd.SetLe(0)
 	resp, err := cs.c.Send(cmd)
 	if err = cs.checkOK(resp, err); err != nil {
-		cs.ApplicationInfo = &types.ApplicationInfo{}
 		return err
 	}
 

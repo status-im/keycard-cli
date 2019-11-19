@@ -57,29 +57,19 @@ func (cs *CommandSet) DeleteKeycardInstancesAndPackage() error {
 		return ErrSecureChannelNotOpen
 	}
 
-	instanceAID, err := identifiers.KeycardInstanceAID(identifiers.KeycardDefaultInstanceIndex)
-	if err != nil {
-		return err
-	}
-
-	ids := [][]byte{
-		identifiers.NdefInstanceAID,
-		instanceAID,
-		identifiers.PackageAID,
-	}
-
-	for _, aid := range ids {
-		err := cs.Delete(aid)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return cs.DeleteObjectAndRelatedObject(identifiers.PackageAID)
 }
 
-func (cs *CommandSet) Delete(aid []byte) error {
-	cmd := NewCommandDelete(aid)
+func (cs *CommandSet) DeleteObject(aid []byte) error {
+	return cs.Delete(aid, P2DeleteObject)
+}
+
+func (cs *CommandSet) DeleteObjectAndRelatedObject(aid []byte) error {
+	return cs.Delete(aid, P2DeleteObjectAndRelatedObject)
+}
+
+func (cs *CommandSet) Delete(aid []byte, p2 uint8) error {
+	cmd := NewCommandDelete(aid, p2)
 	resp, err := cs.sc.Send(cmd)
 	return cs.checkOK(resp, err, SwOK, SwReferencedDataNotFound)
 }
@@ -134,6 +124,14 @@ func (cs *CommandSet) InstallKeycardApplet() error {
 		identifiers.PackageAID,
 		identifiers.KeycardAID,
 		instanceAID,
+		[]byte{})
+}
+
+func (cs *CommandSet) InstallCashApplet() error {
+	return cs.InstallForInstall(
+		identifiers.PackageAID,
+		identifiers.CashAID,
+		identifiers.CashInstanceAID,
 		[]byte{})
 }
 

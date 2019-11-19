@@ -31,7 +31,9 @@ const (
 	P1GetStatusExecLoadFiles           = 0x20
 	P1GetStatusExecLoadFilesAndModules = 0x10
 
-	P2GetStatusTLVData = 0x02
+	P2GetStatusTLVData             = 0x02
+	P2DeleteObject                 = 0x00
+	P2DeleteObjectAndRelatedObject = 0x80
 
 	Sw1ResponseDataIncomplete = 0x61
 
@@ -108,7 +110,7 @@ func NewCommandGetResponse(length uint8) *apdu.Command {
 }
 
 // NewCommandDelete returns a Delete command as defined in the globalplatform specifications.
-func NewCommandDelete(aid []byte) *apdu.Command {
+func NewCommandDelete(aid []byte, p2 uint8) *apdu.Command {
 	data := []byte{tagDeleteAID, byte(len(aid))}
 	data = append(data, aid...)
 
@@ -116,7 +118,7 @@ func NewCommandDelete(aid []byte) *apdu.Command {
 		ClaGp,
 		InsDelete,
 		0,
-		0,
+		p2,
 		data,
 	)
 }

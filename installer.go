@@ -83,6 +83,12 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) error {
 		return err
 	}
 
+	logger.Info("installing Cash applet")
+	if err = cmdSet.InstallCashApplet(); err != nil {
+		logger.Error("installing Cash applet failed", "error", err)
+		return err
+	}
+
 	elapsed := time.Now().Sub(startTime)
 	logger.Info(fmt.Sprintf("installation completed in %f seconds", elapsed.Seconds()))
 	return err
