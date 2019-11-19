@@ -41,6 +41,22 @@
   version = "v1.5.4"
 
 [[projects]]
+  branch = "master"
+  digest = "1:da3a5e112f905f177429b035c55eaa8aabd5db6cd8a1ad2d1ab6c9f6da0d0233"
+  name = "github.com/hsanjuan/go-ndef"
+  packages = [
+    ".",
+    "types/absoluteuri",
+    "types/ext",
+    "types/generic",
+    "types/media",
+    "types/wkt/text",
+    "types/wkt/uri",
+  ]
+  pruneopts = "NUT"
+  revision = "4235d2635a814a0224a871190a1aac1f8449dbde"
+
+[[projects]]
   branch = "develop"
   digest = "1:9b4833a900fe5a52f64346bde7749ea58797e8d010ca05d5a78e2ba5ca1864cd"
   name = "github.com/status-im/keycard-go"
@@ -103,6 +119,7 @@
     "github.com/ebfe/scard",
     "github.com/ethereum/go-ethereum/crypto",
     "github.com/ethereum/go-ethereum/log",
+    "github.com/hsanjuan/go-ndef",
     "github.com/status-im/keycard-go",
     "github.com/status-im/keycard-go/apdu",
     "github.com/status-im/keycard-go/globalplatform",

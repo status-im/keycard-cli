@@ -904,7 +904,7 @@ func (s *Shell) writeSignatureInfo(sig *types.Signature) {
 	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
 	s.write(fmt.Sprintf("ETH SIGNATURE: 0x%x\n", ethSig))
 	s.write(fmt.Sprintf("PUBLIC KEY: 0x%x\n", sig.PubKey()))
-	s.write(fmt.Sprintf("ADDRESS: 0x%x\n\n", address))
+	s.write(fmt.Sprintf("ADDRESS: %s\n\n", address.String()))
 }
 
 func hashEthereumMessage(message string) []byte {

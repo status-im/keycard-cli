@@ -44,3 +44,7 @@
 [[constraint]]
   branch = "develop"
   name = "github.com/status-im/keycard-go"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hsanjuan/go-ndef"

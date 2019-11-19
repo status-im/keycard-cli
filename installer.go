@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ethereum/go-ethereum/crypto"
+	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
 	"github.com/status-im/keycard-go/hexutils"
@@ -16,7 +18,7 @@ import (
 
 var (
 	ErrAppletAlreadyInstalled = errors.New("keycard applet already installed")
-	ndefRecord                = hexutils.HexToBytes("0024d40f12616e64726f69642e636f6d3a706b67696d2e7374617475732e657468657265756d")
+	DefaultNdefRecord         = hexutils.HexToBytes("0024d40f12616e64726f69642e636f6d3a706b67696d2e7374617475732e657468657265756d")
 )
 
 // Installer defines a struct with methods to install applets in a card.
@@ -32,7 +34,9 @@ func NewInstaller(t keycardio.Transmitter) *Installer {
 }
 
 // Install installs the applet from the specified capFile.
-func (i *Installer) Install(capFile *os.File, overwriteApplet bool) error {
+func (i *Installer) Install(capFile *os.File, overwriteApplet bool, ndefRecordTemplate string) error {
+	ndefRecord := DefaultNdefRecord
+
 	logger.Info("installation started")
 	startTime := time.Now()
 	cmdSet := globalplatform.NewCommandSet(i.c)
@@ -71,12 +75,6 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) error {
 		return err
 	}
 
-	logger.Info("installing NDEF applet")
-	if err = cmdSet.InstallNDEFApplet(ndefRecord); err != nil {
-		logger.Error("installing NDEF applet failed", "error", err)
-		return err
-	}
-
 	logger.Info("installing Keycard applet")
 	if err = cmdSet.InstallKeycardApplet(); err != nil {
 		logger.Error("installing Keycard applet failed", "error", err)
@@ -86,6 +84,35 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool) error {
 	logger.Info("installing Cash applet")
 	if err = cmdSet.InstallCashApplet(); err != nil {
 		logger.Error("installing Cash applet failed", "error", err)
+		return err
+	}
+
+	if ndefRecordTemplate != "" {
+		ndefURL, newNdefRecord, err := i.buildNDEFRecordWithCashAppletData(ndefRecordTemplate)
+		if err != nil {
+			return err
+		}
+
+		logger.Info("setting NDEF url", "url", ndefURL)
+		ndefRecord = newNdefRecord
+
+		logger.Info("re-select ISD")
+		err = cmdSet.Select()
+		if err != nil {
+			logger.Error("re-select failed", "error", err)
+			return err
+		}
+
+		logger.Info("re-opening secure channel")
+		if err = cmdSet.OpenSecureChannel(); err != nil {
+			logger.Error("open secure channel failed", "error", err)
+			return err
+		}
+	}
+
+	logger.Info("installing NDEF applet")
+	if err = cmdSet.InstallNDEFApplet(ndefRecord); err != nil {
+		logger.Error("installing NDEF applet failed", "error", err)
 		return err
 	}
 
@@ -118,6 +145,32 @@ func (i *Installer) Delete() error {
 	}
 
 	return nil
+}
+
+func (i *Installer) buildNDEFRecordWithCashAppletData(ndefRecordTemplate string) (string, []byte, error) {
+	cashCmdSet := keycard.NewCashCommandSet(i.c)
+	logger.Info("selecting cash applet")
+	err := cashCmdSet.Select()
+	if err != nil {
+		logger.Error("error selecting cash applet", "error", err)
+		return "", nil, err
+	}
+
+	info := cashCmdSet.CashApplicationInfo
+	logger.Info("parsing cash applet public key", "public key", fmt.Sprintf("0x%x", info.PublicKey))
+	ecdsaPubKey, err := crypto.UnmarshalPubkey(info.PublicKey)
+	if err != nil {
+		logger.Error("error parsing cash applet public key", "error", err)
+		return "", nil, err
+	}
+
+	address := crypto.PubkeyToAddress(*ecdsaPubKey)
+	logger.Info("deriving cash applet address", "address", address.String())
+	vars := map[string]string{
+		"cashAddress": address.String(),
+	}
+
+	return buildNdefDataWithURL(ndefRecordTemplate, vars)
 }
 
 func (i *Installer) checkAppletAlreadyInstalled(cmdSet *globalplatform.CommandSet, overwriteApplet bool) error {
