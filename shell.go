@@ -145,6 +145,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
+		"keycard-load-seed":             s.commandKeycardLoadSeed,
 		"cash-select":                   s.commandCashSelect,
 		"cash-sign":                     s.commandCashSign,
 	}
@@ -781,6 +782,29 @@ func (s *Shell) commandKeycardSetPinlessPath(args ...string) error {
 		logger.Error("set pinless path failed", "error", err)
 		return err
 	}
+
+	return nil
+}
+
+func (s *Shell) commandKeycardLoadSeed(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	seed, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing seed data", "error", err)
+		return err
+	}
+
+	logger.Info("loading seed", "seed", fmt.Sprintf("%x", seed))
+	keyID, err := s.kCmdSet.LoadSeed(seed)
+	if err != nil {
+		logger.Error("load seed failed", "error", err)
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("key ID %x", keyID))
 
 	return nil
 }

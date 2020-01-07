@@ -25,6 +25,7 @@ const (
 	InsExportKey            = 0xC2
 	InsSign                 = 0xC0
 	InsSetPinlessPath       = 0xC1
+	InsLoadKey              = 0xD0
 
 	P1PairingFirstStep              = 0x00
 	P1PairingFinalStep              = 0x01
@@ -40,12 +41,12 @@ const (
 	P1SignDerive                    = 0x01
 	P1SignDeriveAndMakeCurrent      = 0x02
 	P1SignPinless                   = 0x03
-	P1ExportKeyCurrent              = uint8(0x00)
-	P1ExportKeyDerive               = uint8(0x01)
-	P1ExportKeyDeriveAndMakeCurrent = uint8(0x02)
-
-	P2ExportKeyPrivateAndPublic = uint8(0x00)
-	P2ExportKeyPublicOnly       = uint8(0x01)
+	P1ExportKeyCurrent              = 0x00
+	P1ExportKeyDerive               = 0x01
+	P1ExportKeyDeriveAndMakeCurrent = 0x02
+	P2ExportKeyPrivateAndPublic     = 0x00
+	P2ExportKeyPublicOnly           = 0x01
+	P1LoadKeySeed                   = 0x03
 
 	SwNoAvailablePairingSlots = 0x6A84
 )
@@ -177,6 +178,16 @@ func NewCommandChangePairingSecret(secret []byte) *apdu.Command {
 		P1ChangePinPairingSecret,
 		0,
 		secret,
+	)
+}
+
+func NewCommandLoadSeed(seed []byte) *apdu.Command {
+	return apdu.NewCommand(
+		globalplatform.ClaGp,
+		InsLoadKey,
+		P1LoadKeySeed,
+		0,
+		seed,
 	)
 }
 

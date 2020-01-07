@@ -310,6 +310,16 @@ func (cs *CommandSet) SignPinless(data []byte) (*types.Signature, error) {
 	return types.ParseSignature(data, resp.Data)
 }
 
+func (cs *CommandSet) LoadSeed(seed []byte) ([]byte, error) {
+	cmd := NewCommandLoadSeed(seed)
+	resp, err := cs.sc.Send(cmd)
+	if err = cs.checkOK(resp, err); err != nil {
+		return nil, err
+	}
+
+	return resp.Data, nil
+}
+
 func (cs *CommandSet) mutualAuthenticate() error {
 	data := make([]byte, 32)
 	if _, err := rand.Read(data); err != nil {
