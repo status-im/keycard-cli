@@ -266,7 +266,7 @@ func commandInfo(card *scard.Card) error {
 	fmt.Printf("    Key management:%v\n", info.HasKeyManagementCapability())
 	fmt.Printf("    Credentials Management:%v\n", info.HasCredentialsManagementCapability())
 	fmt.Printf("    NDEF:%v\n", info.HasNDEFCapability())
-	fmt.Printf("Cash applet \n")
+	fmt.Printf("Cash applet:\n")
 
 	if cashInfo == nil {
 		fmt.Printf("  Installed: %+v\n", false)
