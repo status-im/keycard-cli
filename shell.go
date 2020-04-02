@@ -820,7 +820,7 @@ func (s *Shell) commandCashSelect(args ...string) error {
 
 	s.write(fmt.Sprintf("Installed: %v\n", info.Installed))
 	s.write(fmt.Sprintf("PublicKey: %x\n", info.PublicKey))
-	s.write(fmt.Sprintf("PublicKeyData: %x\n", info.PublicKeyData))
+	s.write(fmt.Sprintf("PublicData: %x\n", info.PublicData))
 	s.write(fmt.Sprintf("Version: %x\n\n", info.Version))
 
 	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {

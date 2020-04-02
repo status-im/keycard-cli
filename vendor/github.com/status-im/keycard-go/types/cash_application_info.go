@@ -3,10 +3,10 @@ package types
 import "github.com/status-im/keycard-go/apdu"
 
 type CashApplicationInfo struct {
-	Installed     bool
-	PublicKey     []byte
-	PublicKeyData []byte
-	Version       []byte
+	Installed  bool
+	PublicKey  []byte
+	PublicData []byte
+	Version    []byte
 }
 
 func ParseCashApplicationInfo(data []byte) (*CashApplicationInfo, error) {
@@ -23,7 +23,7 @@ func ParseCashApplicationInfo(data []byte) (*CashApplicationInfo, error) {
 		return nil, err
 	}
 
-	pubKeyData, err := apdu.FindTag(data, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x82})
+	pubData, err := apdu.FindTag(data, apdu.Tag{TagApplicationInfoTemplate}, apdu.Tag{0x82})
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func ParseCashApplicationInfo(data []byte) (*CashApplicationInfo, error) {
 	}
 
 	info.PublicKey = pubKey
-	info.PublicKeyData = pubKeyData
+	info.PublicData = pubData
 	info.Version = appVersion
 
 	return info, nil

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ebfe/scard"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -241,7 +242,7 @@ func commandInstall(card *scard.Card) error {
 
 func commandInfo(card *scard.Card) error {
 	i := NewInitializer(card)
-	info, err := i.Info()
+	info, cashInfo, err := i.Info()
 	if err != nil {
 		return err
 	}
@@ -251,19 +252,39 @@ func commandInfo(card *scard.Card) error {
 		keyInitialized = true
 	}
 
-	fmt.Printf("Installed: %+v\n", info.Installed)
-	fmt.Printf("Initialized: %+v\n", info.Initialized)
-	fmt.Printf("Key Initialized: %+v\n", keyInitialized)
-	fmt.Printf("InstanceUID: 0x%x\n", info.InstanceUID)
-	fmt.Printf("SecureChannelPublicKey: 0x%x\n", info.SecureChannelPublicKey)
-	fmt.Printf("Version: 0x%x\n", info.Version)
-	fmt.Printf("AvailableSlots: 0x%x\n", info.AvailableSlots)
-	fmt.Printf("KeyUID: 0x%x\n", info.KeyUID)
-	fmt.Printf("Capabilities:\n")
-	fmt.Printf("  Secure channel:%v\n", info.HasSecureChannelCapability())
-	fmt.Printf("  Key management:%v\n", info.HasKeyManagementCapability())
-	fmt.Printf("  Credentials Management:%v\n", info.HasCredentialsManagementCapability())
-	fmt.Printf("  NDEF:%v\n", info.HasNDEFCapability())
+	fmt.Printf("Keycard Applet:\n")
+	fmt.Printf("  Installed: %+v\n", info.Installed)
+	fmt.Printf("  Initialized: %+v\n", info.Initialized)
+	fmt.Printf("  Key Initialized: %+v\n", keyInitialized)
+	fmt.Printf("  InstanceUID: 0x%x\n", info.InstanceUID)
+	fmt.Printf("  SecureChannelPublicKey: 0x%x\n", info.SecureChannelPublicKey)
+	fmt.Printf("  Version: 0x%x\n", info.Version)
+	fmt.Printf("  AvailableSlots: 0x%x\n", info.AvailableSlots)
+	fmt.Printf("  KeyUID: 0x%x\n", info.KeyUID)
+	fmt.Printf("  Capabilities:\n")
+	fmt.Printf("    Secure channel:%v\n", info.HasSecureChannelCapability())
+	fmt.Printf("    Key management:%v\n", info.HasKeyManagementCapability())
+	fmt.Printf("    Credentials Management:%v\n", info.HasCredentialsManagementCapability())
+	fmt.Printf("    NDEF:%v\n", info.HasNDEFCapability())
+	fmt.Printf("Cash applet \n\n")
+
+	if cashInfo == nil {
+		fmt.Printf("  Installed: %+v\n", false)
+		return nil
+	}
+
+	ecdsaPubKey, err := crypto.UnmarshalPubkey(cashInfo.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	cashAddress := crypto.PubkeyToAddress(*ecdsaPubKey)
+
+	fmt.Printf("  Installed: %+v\n", cashInfo.Installed)
+	fmt.Printf("  PublicKey: 0x%x\n", cashInfo.PublicKey)
+	fmt.Printf("  Address: 0x%x\n", cashAddress)
+	fmt.Printf("  Public Data: 0x%x\n", cashInfo.PublicData)
+	fmt.Printf("  Version: 0x%x\n", cashInfo.Version)
 
 	return nil
 }

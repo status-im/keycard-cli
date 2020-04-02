@@ -68,7 +68,7 @@ func (i *Initializer) Init() (*keycard.Secrets, error) {
 }
 
 // Info returns a types.ApplicationInfo struct with info about the card.
-func (i *Initializer) Info() (*types.ApplicationInfo, error) {
+func (i *Initializer) Info() (*types.ApplicationInfo, *types.CashApplicationInfo, error) {
 	logger.Info("info started")
 	cmdSet := keycard.NewCommandSet(i.c)
 
@@ -82,7 +82,18 @@ func (i *Initializer) Info() (*types.ApplicationInfo, error) {
 		}
 	}
 
-	return cmdSet.ApplicationInfo, err
+	logger.Info("select cash applet")
+	cashCmdSet := keycard.NewCashCommandSet(i.c)
+	err = cashCmdSet.Select()
+	if err != nil {
+		if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
+			err = nil
+		} else {
+			logger.Error("select failed", "error", err)
+		}
+	}
+
+	return cmdSet.ApplicationInfo, cashCmdSet.CashApplicationInfo, err
 }
 
 func (i *Initializer) Pair(pairingPass string) (*types.PairingInfo, error) {

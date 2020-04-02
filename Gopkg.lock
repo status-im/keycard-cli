@@ -58,7 +58,7 @@
 
 [[projects]]
   branch = "develop"
-  digest = "1:44f5b58c27b45056a4d88fe7ce11b00fd0a10a590ef0de9a4a32f50a4de91cce"
+  digest = "1:c1e848dfcb099a3a582671d67bf2aa58ad51b330cf2d808bf8123075da972fc9"
   name = "github.com/status-im/keycard-go"
   packages = [
     ".",
@@ -73,7 +73,7 @@
     "types",
   ]
   pruneopts = "NUT"
-  revision = "f38e9a19958eb492359ace5d068a7ce42e7824f8"
+  revision = "957c095369694cc23ce9f2bca4acd325764860eb"
 
 [[projects]]
   branch = "master"
