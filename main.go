@@ -268,7 +268,7 @@ func commandInfo(card *scard.Card) error {
 	fmt.Printf("    NDEF:%v\n", info.HasNDEFCapability())
 	fmt.Printf("Cash Applet:\n")
 
-	if cashInfo == nil {
+	if len(cashInfo.PublicKey) == 0 {
 		fmt.Printf("  Installed: %+v\n", false)
 		return nil
 	}
