@@ -18,7 +18,7 @@ On linux you need to install and run the [pcsc daemon](https://linux.die.net/man
 
 ## Installation
 
-Download the binary for your platform from the [releases page](https://github.com/status-im/keycard-cli/releases).
+Download the binary for your platform from the [releases page](https://github.com/status-im/keycard-cli/releases) and rename the file to `keycard`, removing the platform specific suffix.
 
 ## Continuous Integration
 
