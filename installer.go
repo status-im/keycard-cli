@@ -10,7 +10,6 @@ import (
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
-	"github.com/status-im/keycard-go/hexutils"
 	"github.com/status-im/keycard-go/identifiers"
 	keycardio "github.com/status-im/keycard-go/io"
 	"github.com/status-im/keycard-go/types"
@@ -18,7 +17,6 @@ import (
 
 var (
 	ErrAppletAlreadyInstalled = errors.New("keycard applet already installed")
-	DefaultNdefRecord         = hexutils.HexToBytes("0024d40f12616e64726f69642e636f6d3a706b67696d2e7374617475732e657468657265756d")
 )
 
 // Installer defines a struct with methods to install applets in a card.
@@ -35,8 +33,6 @@ func NewInstaller(t keycardio.Transmitter) *Installer {
 
 // Install installs the applet from the specified capFile.
 func (i *Installer) Install(capFile *os.File, overwriteApplet bool, ndefRecordTemplate string) error {
-	ndefRecord := DefaultNdefRecord
-
 	logger.Info("installation started")
 	startTime := time.Now()
 	cmdSet := globalplatform.NewCommandSet(i.c)
@@ -88,14 +84,12 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool, ndefRecordTe
 	}
 
 	if ndefRecordTemplate != "" {
-		ndefURL, newNdefRecord, err := i.buildNDEFRecordWithCashAppletData(ndefRecordTemplate)
+		ndefURL, ndefRecord, err := i.buildNDEFRecordWithCashAppletData(ndefRecordTemplate)
 		if err != nil {
 			return err
 		}
 
 		logger.Info("setting NDEF url", "url", ndefURL)
-		ndefRecord = newNdefRecord
-
 		logger.Info("re-select ISD")
 		err = cmdSet.Select()
 		if err != nil {
@@ -108,12 +102,12 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool, ndefRecordTe
 			logger.Error("open secure channel failed", "error", err)
 			return err
 		}
-	}
 
-	logger.Info("installing NDEF applet")
-	if err = cmdSet.InstallNDEFApplet(ndefRecord); err != nil {
-		logger.Error("installing NDEF applet failed", "error", err)
-		return err
+		logger.Info("installing NDEF applet")
+		if err = cmdSet.InstallNDEFApplet(ndefRecord); err != nil {
+			logger.Error("installing NDEF applet failed", "error", err)
+			return err
+		}
 	}
 
 	elapsed := time.Now().Sub(startTime)
