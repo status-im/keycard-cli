@@ -14,7 +14,8 @@
 
 ## Dependencies
 
-On linux you need to install and run the [pcsc daemon](https://linux.die.net/man/8/pcscd).
+* An USB smart card reader (those with contacts are more reliable than NFC readers).
+* On linux you need to install and run the [pcsc daemon](https://linux.die.net/man/8/pcscd).
 
 ## Installation
 
