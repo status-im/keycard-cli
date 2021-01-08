@@ -29,9 +29,10 @@ var (
 	flagCapFile       = flag.String("a", "", "applet cap file path")
 	flagKeycardApplet = flag.Bool("keycard-applet", true, "install keycard applet")
 	flagCashApplet    = flag.Bool("cash-applet", true, "install cash applet")
+	flagNDEFApplet    = flag.Bool("ndef-applet", true, "install NDEF applet")
 	flagOverwrite     = flag.Bool("f", false, "force applet installation if already installed")
 	flagLogLevel      = flag.String("l", "", `Log level, one of: "error", "warn", "info", "debug", and "trace"`)
-	flagNdefTemplate  = flag.String("ndef", "", "Specify a URL to use in the NDEF record. Use the {{.cashAddress}} variable to get the cash address: http://example.com/{{.cashAddress}}.")
+	flagNDEFTemplate  = flag.String("ndef", "", "Specify a URL to use in the NDEF record. Use the {{.cashAddress}} variable to get the cash address: http://example.com/{{.cashAddress}}.")
 )
 
 func initLogger() {
@@ -238,7 +239,7 @@ func commandInstall(card *scard.Card) error {
 	defer f.Close()
 
 	i := NewInstaller(card)
-	return i.Install(f, *flagOverwrite, *flagKeycardApplet, *flagCashApplet, *flagNdefTemplate)
+	return i.Install(f, *flagOverwrite, *flagKeycardApplet, *flagCashApplet, *flagNDEFApplet, *flagNDEFTemplate)
 }
 
 func commandInfo(card *scard.Card) error {

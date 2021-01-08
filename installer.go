@@ -32,7 +32,7 @@ func NewInstaller(t keycardio.Transmitter) *Installer {
 }
 
 // Install installs the applet from the specified capFile.
-func (i *Installer) Install(capFile *os.File, overwriteApplet bool, installKeycard bool, installCash bool, ndefRecordTemplate string) error {
+func (i *Installer) Install(capFile *os.File, overwriteApplet bool, installKeycard bool, installCash bool, installNDEF bool, ndefRecordTemplate string) error {
 	logger.Info("installation started")
 	startTime := time.Now()
 	cmdSet := globalplatform.NewCommandSet(i.c)
@@ -87,10 +87,17 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool, installKeyca
 		}
 	}
 
-	if ndefRecordTemplate != "" {
-		ndefURL, ndefRecord, err := i.buildNDEFRecordWithCashAppletData(ndefRecordTemplate)
-		if err != nil {
-			return err
+	if installNDEF {
+		var (
+			ndefURL    string
+			ndefRecord []byte
+		)
+
+		if ndefRecordTemplate != "" {
+			ndefURL, ndefRecord, err = i.buildNDEFRecordWithCashAppletData(ndefRecordTemplate)
+			if err != nil {
+				return err
+			}
 		}
 
 		logger.Info("setting NDEF url", "url", ndefURL)
