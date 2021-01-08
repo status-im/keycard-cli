@@ -32,7 +32,7 @@ func NewInstaller(t keycardio.Transmitter) *Installer {
 }
 
 // Install installs the applet from the specified capFile.
-func (i *Installer) Install(capFile *os.File, overwriteApplet bool, ndefRecordTemplate string) error {
+func (i *Installer) Install(capFile *os.File, overwriteApplet bool, installKeycard bool, installCash bool, ndefRecordTemplate string) error {
 	logger.Info("installation started")
 	startTime := time.Now()
 	cmdSet := globalplatform.NewCommandSet(i.c)
@@ -71,16 +71,20 @@ func (i *Installer) Install(capFile *os.File, overwriteApplet bool, ndefRecordTe
 		return err
 	}
 
-	logger.Info("installing Keycard applet")
-	if err = cmdSet.InstallKeycardApplet(); err != nil {
-		logger.Error("installing Keycard applet failed", "error", err)
-		return err
+	if installKeycard {
+		logger.Info("installing Keycard applet")
+		if err = cmdSet.InstallKeycardApplet(); err != nil {
+			logger.Error("installing Keycard applet failed", "error", err)
+			return err
+		}
 	}
 
-	logger.Info("installing Cash applet")
-	if err = cmdSet.InstallCashApplet(); err != nil {
-		logger.Error("installing Cash applet failed", "error", err)
-		return err
+	if installCash {
+		logger.Info("installing Cash applet")
+		if err = cmdSet.InstallCashApplet(); err != nil {
+			logger.Error("installing Cash applet failed", "error", err)
+			return err
+		}
 	}
 
 	if ndefRecordTemplate != "" {
