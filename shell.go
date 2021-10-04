@@ -670,13 +670,14 @@ func (s *Shell) commandKeycardExportKey(args ...string) error {
 	}
 
 	logger.Info(fmt.Sprintf("export key %s", args[0]))
-	key, err := s.kCmdSet.ExportKey(true, false, true, args[0])
+	privKey, pubKey, err := s.kCmdSet.ExportKey(true, false, false, args[0])
 	if err != nil {
 		logger.Error("export key failed", "error", err)
 		return err
 	}
 
-	s.write(fmt.Sprintf("EXPORTED KEY\n%x\n\n", key))
+	s.write(fmt.Sprintf("EXPORTED PRIVATE KEY\n%x\n", privKey))
+	s.write(fmt.Sprintf("EXPORTED PUBLIC KEY\n%x\n\n", pubKey))
 
 	return nil
 }
