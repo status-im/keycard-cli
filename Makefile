@@ -18,7 +18,7 @@ export IMAGE_NAME  ?= statusteam/keycard-cli-ci:$(IMAGE_TAG)
 export GO_PROJECT_PATH ?= github.com/$(GITHUB_USER)/$(GITHUB_REPO)
 
 deps:
-	echo go version
+	go version
 	go install github.com/karalabe/xgo
 	go install github.com/aktau/github-release
 
