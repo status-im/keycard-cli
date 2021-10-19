@@ -19,8 +19,8 @@ export GO_PROJECT_PATH ?= github.com/$(GITHUB_USER)/$(GITHUB_REPO)
 
 deps:
 	go version
-	go install github.com/karalabe/xgo
-	go install github.com/aktau/github-release
+	go install github.com/karalabe/xgo@latest
+	go install github.com/aktau/github-release@latest
 
 build:
 	go build -i -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
