@@ -18,8 +18,8 @@ export IMAGE_NAME  ?= statusteam/keycard-cli-ci:$(IMAGE_TAG)
 export GO_PROJECT_PATH ?= github.com/$(GITHUB_USER)/$(GITHUB_REPO)
 
 deps:
-	go get github.com/karalabe/xgo
-	go get github.com/aktau/github-release
+	go install github.com/karalabe/xgo
+	go install github.com/aktau/github-release
 
 build:
 	go build -i -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
