@@ -148,6 +148,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
 		"keycard-load-seed":             s.commandKeycardLoadSeed,
+		"keycard-generate-mnemonic":     s.commandKeycardGenerateMnemonic,
 		"cash-select":                   s.commandCashSelect,
 		"cash-sign":                     s.commandCashSign,
 	}
@@ -820,6 +821,29 @@ func (s *Shell) commandKeycardSetPinlessPath(args ...string) error {
 		logger.Error("set pinless path failed", "error", err)
 		return err
 	}
+
+	return nil
+}
+
+func (s *Shell) commandKeycardGenerateMnemonic(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	checksumSize, err := strconv.ParseInt(args[0], 10, 8)
+	if err != nil {
+		logger.Error("failed parsing checksum size", "error", err)
+		return err
+	}
+
+	logger.Info("generate mnemonic", "checksumSize", checksumSize)
+	indexes, err := s.kCmdSet.GenerateMnemonic(int(checksumSize))
+	if err != nil {
+		logger.Error("generate mnemonic failed", "error", err)
+		return err
+	}
+
+	s.write(fmt.Sprintf("MNEMONIC INDEXES %v\n\n", indexes))
 
 	return nil
 }
