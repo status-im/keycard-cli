@@ -1,4 +1,4 @@
-FROM karalabe/xgo-1.11.x
+FROM karalabe/xgo-1.13.x
 
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
