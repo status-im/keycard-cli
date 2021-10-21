@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/status-im/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"

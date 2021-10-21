@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/ebfe/scard"
-	"github.com/status-im/go-ethereum/crypto"
-	"github.com/status-im/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 var version string
