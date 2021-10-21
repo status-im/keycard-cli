@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/ebfe/scard"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/status-im/go-ethereum/crypto"
+	"github.com/status-im/go-ethereum/log"
 )
 
 var version string
@@ -21,7 +21,7 @@ var version string
 type commandFunc func(*scard.Card) error
 
 var (
-	logger = log.New("package", "status-go/cmd/keycard")
+	logger = log.New("package", "keycard-cli")
 
 	commands map[string]commandFunc
 	command  string

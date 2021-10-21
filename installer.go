@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/status-im/go-ethereum/crypto"
 	keycard "github.com/status-im/keycard-go"
 	"github.com/status-im/keycard-go/apdu"
 	"github.com/status-im/keycard-go/globalplatform"
