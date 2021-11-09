@@ -85,4 +85,4 @@ keycard-cli delete -l debug
 ```
 
 ### Keycard shell
-TODO
+Check the `_shell-commands-examples` folder.
