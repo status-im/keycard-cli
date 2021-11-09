@@ -57,8 +57,6 @@ func init() {
 		"info":    commandInfo,
 		"delete":  commandDelete,
 		"init":    commandInit,
-		"pair":    commandPair,
-		"status":  commandStatus,
 		"shell":   commandShell,
 	}
 
@@ -313,37 +311,6 @@ func commandInit(card *scard.Card) error {
 	fmt.Printf("PIN %s\n", secrets.Pin())
 	fmt.Printf("PUK %s\n", secrets.Puk())
 	fmt.Printf("Pairing password: %s\n", secrets.PairingPass())
-
-	return nil
-}
-
-func commandPair(card *scard.Card) error {
-	i := NewInitializer(card)
-	pairingPass := ask("Pairing password")
-	info, err := i.Pair(pairingPass)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Pairing key 0x%x\n", info.Key)
-	fmt.Printf("Pairing Index %d\n", info.Index)
-
-	return nil
-}
-
-func commandStatus(card *scard.Card) error {
-	i := NewInitializer(card)
-	key := askHex("Pairing key")
-	index := askInt("Pairing index")
-
-	appStatus, err := i.Status(key, index)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
-	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
-	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
 
 	return nil
 }
