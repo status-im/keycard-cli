@@ -135,6 +135,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-verify-pin":            s.commandKeycardVerifyPIN,
 		"keycard-change-pin":            s.commandKeycardChangePIN,
 		"keycard-change-puk":            s.commandKeycardChangePUK,
+		"keycard-unblock-pin":           s.commandKeycardUnblockPin,
 		"keycard-change-pairing-secret": s.commandKeycardChangePairingSecret,
 		"keycard-generate-key":          s.commandKeycardGenerateKey,
 		"keycard-remove-key":            s.commandKeycardRemoveKey,
@@ -587,6 +588,20 @@ func (s *Shell) commandKeycardChangePUK(args ...string) error {
 	logger.Info("change PUK")
 	if err := s.kCmdSet.ChangePUK(args[0]); err != nil {
 		logger.Error("change PUK failed", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *Shell) commandKeycardUnblockPin(args ...string) error {
+	if err := s.requireArgs(args, 2); err != nil {
+		return err
+	}
+
+	logger.Info("unblock PIN")
+	if err := s.kCmdSet.UnblockPIN(args[0], args[1]); err != nil {
+		logger.Error("unblock PIN failed", "error", err)
 		return err
 	}
 
