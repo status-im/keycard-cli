@@ -14,11 +14,12 @@
 
 ## Dependencies
 
-On linux you need to install and run the [pcsc daemon](https://linux.die.net/man/8/pcscd).
+* An USB smart card reader (those with contacts are more reliable than NFC readers).
+* On linux you need to install and run the [pcsc daemon](https://linux.die.net/man/8/pcscd).
 
 ## Installation
 
-Download the binary for your platform from the [releases page](https://github.com/status-im/keycard-cli/releases).
+Download the binary for your platform from the [releases page](https://github.com/status-im/keycard-cli/releases) and rename the file to `keycard`, removing the platform specific suffix.
 
 ## Continuous Integration
 
@@ -84,4 +85,4 @@ keycard-cli delete -l debug
 ```
 
 ### Keycard shell
-TODO
+Check the `_shell-commands-examples` folder.

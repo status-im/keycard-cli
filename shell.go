@@ -94,6 +94,7 @@ type Shell struct {
 	Secrets    *keycard.Secrets
 	gpCmdSet   *globalplatform.CommandSet
 	kCmdSet    *keycard.CommandSet
+	cashCmdSet *keycard.CashCommandSet
 	commands   map[string]shellCommand
 	out        *bytes.Buffer
 	tplFuncMap template.FuncMap
@@ -103,11 +104,12 @@ func NewShell(t keycardio.Transmitter) *Shell {
 	c := keycardio.NewNormalChannel(t)
 
 	s := &Shell{
-		t:        t,
-		c:        c,
-		kCmdSet:  keycard.NewCommandSet(c),
-		gpCmdSet: globalplatform.NewCommandSet(c),
-		out:      new(bytes.Buffer),
+		t:          t,
+		c:          c,
+		kCmdSet:    keycard.NewCommandSet(c),
+		cashCmdSet: keycard.NewCashCommandSet(c),
+		gpCmdSet:   globalplatform.NewCommandSet(c),
+		out:        new(bytes.Buffer),
 	}
 
 	tplFuncs := &TemplateFuncs{s}
@@ -133,15 +135,23 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-verify-pin":            s.commandKeycardVerifyPIN,
 		"keycard-change-pin":            s.commandKeycardChangePIN,
 		"keycard-change-puk":            s.commandKeycardChangePUK,
+		"keycard-unblock-pin":           s.commandKeycardUnblockPin,
 		"keycard-change-pairing-secret": s.commandKeycardChangePairingSecret,
 		"keycard-generate-key":          s.commandKeycardGenerateKey,
 		"keycard-remove-key":            s.commandKeycardRemoveKey,
 		"keycard-derive-key":            s.commandKeycardDeriveKey,
+		"keycard-export-key-private":    s.commandKeycardExportKeyPrivate,
+		"keycard-export-key-public":     s.commandKeycardExportKeyPublic,
 		"keycard-sign":                  s.commandKeycardSign,
+		"keycard-sign-with-path":        s.commandKeycardSignWithPath,
 		"keycard-sign-message":          s.commandKeycardSignMessage,
 		"keycard-sign-pinless":          s.commandKeycardSignPinless,
 		"keycard-sign-message-pinless":  s.commandKeycardSignMessagePinless,
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
+		"keycard-load-seed":             s.commandKeycardLoadSeed,
+		"keycard-generate-mnemonic":     s.commandKeycardGenerateMnemonic,
+		"cash-select":                   s.commandCashSelect,
+		"cash-sign":                     s.commandCashSign,
 	}
 
 	return s
@@ -258,7 +268,7 @@ func (s *Shell) commandGPDelete(args ...string) error {
 
 	logger.Info(fmt.Sprintf("delete %x", aid))
 
-	return s.gpCmdSet.Delete(aid)
+	return s.gpCmdSet.DeleteObject(aid)
 }
 
 func (s *Shell) commandGPLoad(args ...string) error {
@@ -584,6 +594,20 @@ func (s *Shell) commandKeycardChangePUK(args ...string) error {
 	return nil
 }
 
+func (s *Shell) commandKeycardUnblockPin(args ...string) error {
+	if err := s.requireArgs(args, 2); err != nil {
+		return err
+	}
+
+	logger.Info("unblock PIN")
+	if err := s.kCmdSet.UnblockPIN(args[0], args[1]); err != nil {
+		logger.Error("unblock PIN failed", "error", err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *Shell) commandKeycardChangePairingSecret(args ...string) error {
 	if err := s.requireArgs(args, 1); err != nil {
 		return err
@@ -657,6 +681,42 @@ func (s *Shell) commandKeycardDeriveKey(args ...string) error {
 	return nil
 }
 
+func (s *Shell) commandKeycardExportKeyPrivate(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("export key %s", args[0]))
+	privKey, pubKey, err := s.kCmdSet.ExportKey(true, false, false, args[0])
+	if err != nil {
+		logger.Error("export key failed", "error", err)
+		return err
+	}
+
+	s.write(fmt.Sprintf("EXPORTED PRIVATE KEY\n%x\n", privKey))
+	s.write(fmt.Sprintf("EXPORTED PUBLIC KEY\n%x\n\n", pubKey))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardExportKeyPublic(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("export key %s", args[0]))
+	privKey, pubKey, err := s.kCmdSet.ExportKey(true, false, true, args[0])
+	if err != nil {
+		logger.Error("export key failed", "error", err)
+		return err
+	}
+
+	s.write(fmt.Sprintf("EXPORTED PRIVATE KEY\n%x\n", privKey))
+	s.write(fmt.Sprintf("EXPORTED PUBLIC KEY\n%x\n\n", pubKey))
+
+	return nil
+}
+
 func (s *Shell) commandKeycardSign(args ...string) error {
 	if err := s.requireArgs(args, 1); err != nil {
 		return err
@@ -672,6 +732,29 @@ func (s *Shell) commandKeycardSign(args ...string) error {
 	sig, err := s.kCmdSet.Sign(data)
 	if err != nil {
 		logger.Error("sign failed", "error", err)
+		return err
+	}
+
+	s.writeSignatureInfo(sig)
+
+	return nil
+}
+
+func (s *Shell) commandKeycardSignWithPath(args ...string) error {
+	if err := s.requireArgs(args, 2); err != nil {
+		return err
+	}
+
+	data, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing hex data", "error", err)
+		return err
+	}
+
+	logger.Info("sign with path")
+	sig, err := s.kCmdSet.SignWithPath(data, args[1])
+	if err != nil {
+		logger.Error("sign with path failed", "error", err)
 		return err
 	}
 
@@ -757,6 +840,97 @@ func (s *Shell) commandKeycardSetPinlessPath(args ...string) error {
 	return nil
 }
 
+func (s *Shell) commandKeycardGenerateMnemonic(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	checksumSize, err := strconv.ParseInt(args[0], 10, 8)
+	if err != nil {
+		logger.Error("failed parsing checksum size", "error", err)
+		return err
+	}
+
+	logger.Info("generate mnemonic", "checksumSize", checksumSize)
+	indexes, err := s.kCmdSet.GenerateMnemonic(int(checksumSize))
+	if err != nil {
+		logger.Error("generate mnemonic failed", "error", err)
+		return err
+	}
+
+	s.write(fmt.Sprintf("MNEMONIC INDEXES %v\n\n", indexes))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardLoadSeed(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	seed, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing seed data", "error", err)
+		return err
+	}
+
+	logger.Info("loading seed", "seed", fmt.Sprintf("%x", seed))
+	keyID, err := s.kCmdSet.LoadSeed(seed)
+	if err != nil {
+		logger.Error("load seed failed", "error", err)
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("key ID %x", keyID))
+
+	return nil
+}
+
+func (s *Shell) commandCashSelect(args ...string) error {
+	if err := s.requireArgs(args, 0); err != nil {
+		return err
+	}
+
+	logger.Info("select cash")
+	err := s.cashCmdSet.Select()
+	info := s.cashCmdSet.CashApplicationInfo
+
+	s.write(fmt.Sprintf("Installed: %v\n", info.Installed))
+	s.write(fmt.Sprintf("PublicKey: %x\n", info.PublicKey))
+	s.write(fmt.Sprintf("PublicData: %x\n", info.PublicData))
+	s.write(fmt.Sprintf("Version: %x\n\n", info.Version))
+
+	if e, ok := err.(*apdu.ErrBadResponse); ok && e.Sw == globalplatform.SwFileNotFound {
+		logger.Error("select cash failed", "error", err)
+		return ErrCashNotInstalled
+	}
+
+	return err
+}
+
+func (s *Shell) commandCashSign(args ...string) error {
+	if err := s.requireArgs(args, 1); err != nil {
+		return err
+	}
+
+	data, err := s.parseHex(args[0])
+	if err != nil {
+		logger.Error("failed parsing hex data", "error", err)
+		return err
+	}
+
+	logger.Info("sign")
+	sig, err := s.cashCmdSet.Sign(data)
+	if err != nil {
+		logger.Error("sign failed", "error", err)
+		return err
+	}
+
+	s.writeSignatureInfo(sig)
+
+	return nil
+}
+
 func (s *Shell) requireArgs(args []string, possibleArgsN ...int) error {
 	for _, n := range possibleArgsN {
 		if len(args) == n {
@@ -831,7 +1005,7 @@ func (s *Shell) writeSignatureInfo(sig *types.Signature) {
 	s.write(fmt.Sprintf("SIGNATURE V: %x\n", sig.V()))
 	s.write(fmt.Sprintf("ETH SIGNATURE: 0x%x\n", ethSig))
 	s.write(fmt.Sprintf("PUBLIC KEY: 0x%x\n", sig.PubKey()))
-	s.write(fmt.Sprintf("ADDRESS: 0x%x\n\n", address))
+	s.write(fmt.Sprintf("ADDRESS: %s\n\n", address.String()))
 }
 
 func hashEthereumMessage(message string) []byte {

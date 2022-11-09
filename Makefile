@@ -18,8 +18,9 @@ export IMAGE_NAME  ?= statusteam/keycard-cli-ci:$(IMAGE_TAG)
 export GO_PROJECT_PATH ?= github.com/$(GITHUB_USER)/$(GITHUB_REPO)
 
 deps:
-	go get github.com/karalabe/xgo
-	go get github.com/aktau/github-release
+	go version
+	go install github.com/karalabe/xgo@latest
+	go install github.com/aktau/github-release@latest
 
 build:
 	go build -i -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
@@ -34,6 +35,7 @@ docker-image:
 
 build-platforms:
 	xgo \
+		-ldflags "-X main.version=$(VERSION)" \
 		-out $(BIN_NAME) \
 		-dest $(GOBIN) \
 		-image $(IMAGE_NAME) \

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ebfe/scard"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -20,14 +21,18 @@ var version string
 type commandFunc func(*scard.Card) error
 
 var (
-	logger = log.New("package", "status-go/cmd/keycard")
+	logger = log.New("package", "keycard-cli")
 
 	commands map[string]commandFunc
 	command  string
 
-	flagCapFile   = flag.String("a", "", "applet cap file path")
-	flagOverwrite = flag.Bool("f", false, "force applet installation if already installed")
-	flagLogLevel  = flag.String("l", "", `Log level, one of: "error", "warn", "info", "debug", and "trace"`)
+	flagCapFile       = flag.String("a", "", "applet cap file path")
+	flagKeycardApplet = flag.Bool("keycard-applet", true, "install keycard applet")
+	flagCashApplet    = flag.Bool("cash-applet", true, "install cash applet")
+	flagNDEFApplet    = flag.Bool("ndef-applet", true, "install NDEF applet")
+	flagOverwrite     = flag.Bool("f", false, "force applet installation if already installed")
+	flagLogLevel      = flag.String("l", "", `Log level, one of: "error", "warn", "info", "debug", and "trace"`)
+	flagNDEFTemplate  = flag.String("ndef", "", "Specify a URL to use in the NDEF record. Use the {{.cashAddress}} variable to get the cash address: http://example.com/{{.cashAddress}}.")
 )
 
 func initLogger() {
@@ -52,8 +57,6 @@ func init() {
 		"info":    commandInfo,
 		"delete":  commandDelete,
 		"init":    commandInit,
-		"pair":    commandPair,
-		"status":  commandStatus,
 		"shell":   commandShell,
 	}
 
@@ -223,7 +226,7 @@ func commandVersion(card *scard.Card) error {
 
 func commandInstall(card *scard.Card) error {
 	if *flagCapFile == "" {
-		logger.Error("you must specify a cap file path with the -f flag\n")
+		logger.Error("you must specify a cap file path with the -a flag\n")
 		usage()
 	}
 
@@ -234,13 +237,12 @@ func commandInstall(card *scard.Card) error {
 	defer f.Close()
 
 	i := NewInstaller(card)
-
-	return i.Install(f, *flagOverwrite)
+	return i.Install(f, *flagOverwrite, *flagKeycardApplet, *flagCashApplet, *flagNDEFApplet, *flagNDEFTemplate)
 }
 
 func commandInfo(card *scard.Card) error {
 	i := NewInitializer(card)
-	info, err := i.Info()
+	info, cashInfo, err := i.Info()
 	if err != nil {
 		return err
 	}
@@ -250,19 +252,39 @@ func commandInfo(card *scard.Card) error {
 		keyInitialized = true
 	}
 
-	fmt.Printf("Installed: %+v\n", info.Installed)
-	fmt.Printf("Initialized: %+v\n", info.Initialized)
-	fmt.Printf("Key Initialized: %+v\n", keyInitialized)
-	fmt.Printf("InstanceUID: 0x%x\n", info.InstanceUID)
-	fmt.Printf("SecureChannelPublicKey: 0x%x\n", info.SecureChannelPublicKey)
-	fmt.Printf("Version: 0x%x\n", info.Version)
-	fmt.Printf("AvailableSlots: 0x%x\n", info.AvailableSlots)
-	fmt.Printf("KeyUID: 0x%x\n", info.KeyUID)
-	fmt.Printf("Capabilities:\n")
-	fmt.Printf("  Secure channel:%v\n", info.HasSecureChannelCapability())
-	fmt.Printf("  Key management:%v\n", info.HasKeyManagementCapability())
-	fmt.Printf("  Credentials Management:%v\n", info.HasCredentialsManagementCapability())
-	fmt.Printf("  NDEF:%v\n", info.HasNDEFCapability())
+	fmt.Printf("Keycard Applet:\n")
+	fmt.Printf("  Installed: %+v\n", info.Installed)
+	fmt.Printf("  Initialized: %+v\n", info.Initialized)
+	fmt.Printf("  Key Initialized: %+v\n", keyInitialized)
+	fmt.Printf("  InstanceUID: 0x%x\n", info.InstanceUID)
+	fmt.Printf("  SecureChannelPublicKey: 0x%x\n", info.SecureChannelPublicKey)
+	fmt.Printf("  Version: 0x%x\n", info.Version)
+	fmt.Printf("  AvailableSlots: 0x%x\n", info.AvailableSlots)
+	fmt.Printf("  KeyUID: 0x%x\n", info.KeyUID)
+	fmt.Printf("  Capabilities:\n")
+	fmt.Printf("    Secure channel:%v\n", info.HasSecureChannelCapability())
+	fmt.Printf("    Key management:%v\n", info.HasKeyManagementCapability())
+	fmt.Printf("    Credentials Management:%v\n", info.HasCredentialsManagementCapability())
+	fmt.Printf("    NDEF:%v\n", info.HasNDEFCapability())
+	fmt.Printf("Cash Applet:\n")
+
+	if len(cashInfo.PublicKey) == 0 {
+		fmt.Printf("  Installed: %+v\n", false)
+		return nil
+	}
+
+	ecdsaPubKey, err := crypto.UnmarshalPubkey(cashInfo.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	cashAddress := crypto.PubkeyToAddress(*ecdsaPubKey)
+
+	fmt.Printf("  Installed: %+v\n", cashInfo.Installed)
+	fmt.Printf("  PublicKey: 0x%x\n", cashInfo.PublicKey)
+	fmt.Printf("  Address: 0x%x\n", cashAddress)
+	fmt.Printf("  Public Data: 0x%x\n", cashInfo.PublicData)
+	fmt.Printf("  Version: 0x%x\n", cashInfo.Version)
 
 	return nil
 }
@@ -289,37 +311,6 @@ func commandInit(card *scard.Card) error {
 	fmt.Printf("PIN %s\n", secrets.Pin())
 	fmt.Printf("PUK %s\n", secrets.Puk())
 	fmt.Printf("Pairing password: %s\n", secrets.PairingPass())
-
-	return nil
-}
-
-func commandPair(card *scard.Card) error {
-	i := NewInitializer(card)
-	pairingPass := ask("Pairing password")
-	info, err := i.Pair(pairingPass)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Pairing key 0x%x\n", info.Key)
-	fmt.Printf("Pairing Index %d\n", info.Index)
-
-	return nil
-}
-
-func commandStatus(card *scard.Card) error {
-	i := NewInitializer(card)
-	key := askHex("Pairing key")
-	index := askInt("Pairing index")
-
-	appStatus, err := i.Status(key, index)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Pin retry count: %d\n", appStatus.PinRetryCount)
-	fmt.Printf("PUK retry count: %d\n", appStatus.PUKRetryCount)
-	fmt.Printf("Key initialized: %v\n", appStatus.KeyInitialized)
 
 	return nil
 }
