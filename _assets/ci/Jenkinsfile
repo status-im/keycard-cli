@@ -13,14 +13,14 @@ pipeline {
   }
 
   environment {
-    PROJECT = 'src/github.com/status-im/keycard-cli'
+    PROJECT = "${env.WORKSPACE}/src/github.com/status-im/keycard-cli"
     GOPATH  = "${env.WORKSPACE}"
     PATH    = "${env.PATH}:${env.GOPATH}/bin"
   }
 
   stages {
     stage('Prep') {
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         sh 'make deps'
       } }
     }
@@ -29,7 +29,7 @@ pipeline {
       agent {
         docker {
           label 'linux'
-          image 'statusteam/keycard-cli-ci:latest'
+          image 'statusteam/keycard-cli-ci:xgo-1.18.1'
           args '--entrypoint=""' /* allows jenkins use cat */
         }
       }
@@ -40,25 +40,25 @@ pipeline {
       options {
         checkoutToSubdirectory('src/github.com/status-im/keycard-cli')
       }
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         sh 'make test'
       } }
     }
 
     stage('Build') {
-      steps { script { dir(env.PROJECT) {
+      steps { script { dir(PROJECT) {
         sh 'make build-platforms'
       } } }
     }
 
     stage('Archive') {
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         archiveArtifacts('build/bin/*')
       } }
     }
 
     stage('Release') {
-      steps { dir(env.PROJECT) {
+      steps { dir(PROJECT) {
         withCredentials([usernamePassword(
           credentialsId:  'status-im-auto',
           usernameVariable: 'GITHUB_USER_NAME',
