@@ -16,12 +16,12 @@ gp-install-for-install A0000008040001 A000000804000103 A00000080400010301
 
 # init
 keycard-select
-keycard-set-secrets 123456 123456789012 KeycardTest
+keycard-set-secrets 123456 123456789012 KeycardDefaultPairing
 keycard-init
 
 # generate key
 keycard-select
-keycard-set-secrets 123456 123456789012 KeycardTest
+keycard-set-secrets 123456 123456789012 KeycardDefaultPairing
 keycard-pair
 keycard-open-secure-channel
 keycard-verify-pin {{ session_pin }}
@@ -31,7 +31,7 @@ keycard-unpair {{ session_pairing_index }}
 
 # sign
 keycard-select
-keycard-set-secrets 123456 123456789012 KeycardTest
+keycard-set-secrets 123456 123456789012 KeycardDefaultPairing
 keycard-pair
 
 keycard-open-secure-channel

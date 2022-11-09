@@ -1,5 +1,5 @@
 keycard-select
-keycard-set-secrets 111111 123456789012 KeycardTest
+keycard-set-secrets 111111 123456789012 KeycardDefaultPairing
 keycard-pair
 
 keycard-open-secure-channel

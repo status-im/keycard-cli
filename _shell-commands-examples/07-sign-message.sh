@@ -1,7 +1,7 @@
 # select the keycard applet
 keycard-select
 # set the secrets we had from the initialization
-keycard-set-secrets 123456 123456789012 KeycardTest
+keycard-set-secrets 123456 123456789012 KeycardDefaultPairing
 # pairing is usually done once per device
 keycard-pair
 keycard-open-secure-channel
