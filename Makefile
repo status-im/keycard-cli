@@ -23,9 +23,9 @@ deps:
 	go install github.com/aktau/github-release@latest
 
 build:
-	go build -i -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
+	go build -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
 	@echo "Compilation done."
-	@echo "Run \"./build/bin/$(BIN_NAME) -h\" to view available commands."
+	@echo "Run \"./build/bin/$(BIN_NAME)\" to view available commands."
 
 test:
 	go test -v ./...
