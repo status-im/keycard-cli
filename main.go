@@ -226,7 +226,7 @@ func commandVersion(card *scard.Card) error {
 
 func commandInstall(card *scard.Card) error {
 	if *flagCapFile == "" {
-		logger.Error("you must specify a cap file path with the -f flag\n")
+		logger.Error("you must specify a cap file path with the -a flag\n")
 		usage()
 	}
 
