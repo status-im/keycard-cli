@@ -2,7 +2,7 @@ pipeline {
   agent {
     docker { 
       label 'linux'
-      image 'statusteam/keycard-cli-ci:latest'
+      image 'statusteam/keycard-cli-ci:xgo-1.18.1'
       args '--entrypoint=""' /* allows jenkins use cat */
     }
   }

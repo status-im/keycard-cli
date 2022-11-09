@@ -12,15 +12,19 @@ VERSION = $(shell cat VERSION)
 export GITHUB_USER ?= status-im
 export GITHUB_REPO ?= $(PROJECT_NAME)
 
-export IMAGE_TAG   ?= latest
+export IMAGE_TAG   ?= xgo-1.18.1
 export IMAGE_NAME  ?= statusteam/keycard-cli-ci:$(IMAGE_TAG)
 
 export GO_PROJECT_PATH ?= github.com/$(GITHUB_USER)/$(GITHUB_REPO)
 
-deps:
+deps: install-xgo install-github-release
 	go version
-	go install github.com/karalabe/xgo@latest
-	go install github.com/aktau/github-release@latest
+
+install-xgo:
+	go install github.com/crazy-max/xgo@v0.23.0
+
+install-github-release:
+	go install github.com/aktau/github-release@v0.10.0
 
 build:
 	go build -o $(GOBIN)/$(BIN_NAME) -v -ldflags "-X main.version=$(VERSION)" .
@@ -35,10 +39,10 @@ docker-image:
 
 build-platforms:
 	xgo \
-		-ldflags "-X main.version=$(VERSION)" \
-		-out $(BIN_NAME) \
-		-dest $(GOBIN) \
-		-image $(IMAGE_NAME) \
+		-ldflags="-X main.version=$(VERSION)" \
+		-out=$(BIN_NAME) \
+		-dest=$(GOBIN) \
+		-docker-image=$(IMAGE_NAME) \
 		-targets=$(XGO_TARGETS) .
 
 release:
