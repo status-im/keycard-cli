@@ -10,6 +10,11 @@ RUN apt-get update \
  && locale-gen ${LANG} \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Jenkins user needs a specific UID/GID to work
+RUN groupadd -g 1001 jenkins \
+ && useradd --create-home -u 1001 -g 1001 jenkins
+USER jenkins
+
 MAINTAINER Jakub Sokolowski "jakub@status.im"
 LABEL description="Image for building keycard-cli tool."
 
