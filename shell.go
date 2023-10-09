@@ -150,6 +150,7 @@ func NewShell(t keycardio.Transmitter) *Shell {
 		"keycard-set-pinless-path":      s.commandKeycardSetPinlessPath,
 		"keycard-load-seed":             s.commandKeycardLoadSeed,
 		"keycard-generate-mnemonic":     s.commandKeycardGenerateMnemonic,
+		"keycard-identify":              s.commandKeycardIdentify,
 		"cash-select":                   s.commandCashSelect,
 		"cash-sign":                     s.commandCashSign,
 	}
@@ -171,7 +172,7 @@ func (s *Shell) Run() error {
 
 	for {
 		line, err := reader.ReadString('\n')
-		if err != nil {
+		if err != nil && err != io.EOF {
 			break
 		}
 
@@ -882,6 +883,36 @@ func (s *Shell) commandKeycardLoadSeed(args ...string) error {
 	}
 
 	logger.Info(fmt.Sprintf("key ID %x", keyID))
+
+	return nil
+}
+
+func (s *Shell) commandKeycardIdentify(args ...string) error {
+	pubkey, err := s.kCmdSet.Identify()
+
+	if err != nil {
+		logger.Error("failed card identification", "error", err)
+		return err
+	}
+
+	logger.Info(fmt.Sprintf("identification public key: %x", pubkey))
+
+	var compareKey []byte
+	if len(args) == 1 {
+		compareKey, err = s.parseHex(args[0])
+
+		if err != nil {
+			logger.Error("failed parsing public key", "error", err)
+			return err
+		}
+	} else {
+		compareKey = pubkey
+	}
+
+	if !bytes.Equal(compareKey, pubkey) {
+		logger.Error("the recovered key does not match the expected value", "error", err)
+		return errors.New("genuinity check failed")
+	}
 
 	return nil
 }
